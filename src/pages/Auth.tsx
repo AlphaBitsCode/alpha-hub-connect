@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [activeTab, setActiveTab] = useState("email");
   const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   
@@ -45,7 +46,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-alphabits-darkblue via-alphabits-blue to-alphabits-teal p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-alphabits-darkblue to-alphabits-teal p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,24 +55,25 @@ const Auth = () => {
       >
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 bg-white rounded-md flex items-center justify-center">
-              <div className="h-8 w-8 bg-alphabits-darkblue rounded-sm"></div>
-            </div>
+            <img 
+              src="https://alphabits.team/images/AB_Logo_white_icon.png" 
+              alt="Alpha Bits Hub Logo" 
+              className="h-16 w-16"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-white">Alpha Hub</h1>
-          <p className="text-white/80">Project Management Portal</p>
+          <h1 className="text-3xl font-bold text-white">Alpha Bits Hub</h1>
         </div>
         
-        <Card className="glass-card border-white/20">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-white">Sign in</CardTitle>
-            <CardDescription className="text-center text-white/70">
+        <Card className="bg-white rounded-lg border-0 shadow-xl">
+          <CardHeader className="space-y-1 pb-2">
+            <CardTitle className="text-xl text-center text-alphabits-darkblue">Sign in</CardTitle>
+            <CardDescription className="text-center text-gray-500">
               Choose your preferred sign in method
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0">
             <Button
-              className="w-full bg-white text-black hover:bg-white/90 micro-interaction"
+              className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 shadow-sm micro-interaction flex items-center justify-center"
               onClick={handleGoogleSignIn}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -97,24 +99,29 @@ const Auth = () => {
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/20"></span>
+                <span className="w-full border-t border-gray-200"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-alphabits-blue/30 px-2 text-white/70 backdrop-blur-sm">
-                  Or continue with
+                <span className="bg-white px-2 text-gray-500">
+                  OR CONTINUE WITH
                 </span>
               </div>
             </div>
             
-            <Tabs defaultValue="email" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs 
+              defaultValue="email" 
+              className="w-full" 
+              value={activeTab}
+              onValueChange={setActiveTab}
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="email">Email</TabsTrigger>
                 <TabsTrigger value="phone">Phone</TabsTrigger>
               </TabsList>
               <TabsContent value="email">
                 <form onSubmit={handleEmailSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email</Label>
+                    <Label htmlFor="email" className="text-gray-700">Email</Label>
                     <Input
                       id="email"
                       type="email"
@@ -122,10 +129,13 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      className="border-gray-300"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 micro-interaction">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction"
+                  >
                     Send Magic Link
                   </Button>
                 </form>
@@ -133,7 +143,7 @@ const Auth = () => {
               <TabsContent value="phone">
                 <form onSubmit={handlePhoneSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-white">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -141,24 +151,27 @@ const Auth = () => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      className="border-gray-300"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 micro-interaction">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction"
+                  >
                     Send OTP
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-center text-sm text-white/70">
+          <CardFooter className="flex flex-col space-y-2 pt-0">
+            <div className="text-center text-xs text-gray-500">
               By signing in, you agree to our
-              <a href="#" className="underline ml-1 hover:text-white">
+              <a href="#" className="text-alphabits-blue ml-1 hover:underline">
                 Terms of Service
               </a>
               <span className="mx-1">and</span>
-              <a href="#" className="underline hover:text-white">
+              <a href="#" className="text-alphabits-blue hover:underline">
                 Privacy Policy
               </a>
             </div>
