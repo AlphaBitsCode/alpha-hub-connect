@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       setLoading(true);
       
-      // Handle OAuth callback
+      // Handle OAuth callback and hash params
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -41,11 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session.user);
         navigate("/");
-      } else {
-        // Get initial session if no hash
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
       }
       
       setLoading(false);
@@ -70,10 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       
       if (provider === "google") {
+        toast({
+          title: "Redirecting to Google",
+          description: "Please wait while we connect to Google...",
+        });
+        
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: window.location.origin,
+            redirectTo: `${window.location.origin}/auth`,
           },
         });
         
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabase.auth.signInWithOtp({
           email: options.email,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth`,
           },
         });
         

@@ -8,35 +8,135 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [activeTab, setActiveTab] = useState("email");
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   useEffect(() => {
-    if (user && !loading) {
+    // Check for access token in URL hash for redirect-based auth flows
+    const handleRedirectResult = async () => {
+      if (window.location.hash) {
+        setIsProcessing(true);
+        const { data, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          toast({
+            title: "Authentication error",
+            description: error.message,
+            variant: "destructive",
+          });
+          console.error("Error with redirect auth:", error);
+        } else if (data?.user) {
+          toast({
+            title: "Signed in successfully",
+            description: "Welcome back!",
+          });
+          navigate("/");
+        }
+        setIsProcessing(false);
+      }
+    };
+    
+    handleRedirectResult();
+  }, [navigate, toast]);
+  
+  useEffect(() => {
+    if (user && !loading && !isProcessing) {
       navigate("/");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isProcessing]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsProcessing(true);
     await signIn("email", { email });
+    setIsProcessing(false);
   };
   
   const handlePhoneSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn("phone", { phone });
+    
+    if (showOtpInput) {
+      // Verify the OTP
+      setIsProcessing(true);
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone,
+          token: otp,
+          type: "sms"
+        });
+        
+        if (error) throw error;
+        
+        if (data.session) {
+          toast({
+            title: "Signed in successfully",
+            description: "Welcome back!",
+          });
+          navigate("/");
+        }
+      } catch (error: any) {
+        toast({
+          title: "Verification failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    } else {
+      // Send the OTP
+      setIsProcessing(true);
+      try {
+        // For testing, you can use the Supabase test number +12345678900 with any OTP
+        const { error } = await supabase.auth.signInWithOtp({
+          phone,
+        });
+        
+        if (error) throw error;
+        
+        setShowOtpInput(true);
+        toast({
+          title: "OTP sent!",
+          description: "Check your phone for the verification code. For testing, you can use phone number +12345678900 with any OTP.",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Failed to send OTP",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    }
   };
   
   const handleGoogleSignIn = async () => {
+    setIsProcessing(true);
+    toast({
+      title: "Redirecting to Google",
+      description: "Please wait while we connect to Google...",
+    });
     await signIn("google");
   };
 
-  if (loading) {
+  const resetPhoneFlow = () => {
+    setShowOtpInput(false);
+    setOtp("");
+  };
+
+  if (loading || isProcessing) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-alphabits-teal"></div>
@@ -72,7 +172,7 @@ const Auth = () => {
           </CardHeader>
           <CardContent className="space-y-4 pt-0">
             <Button
-              className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 shadow-sm micro-interaction flex items-center justify-center"
+              className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 shadow-sm flex items-center justify-center"
               onClick={handleGoogleSignIn}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -111,7 +211,12 @@ const Auth = () => {
               defaultValue="email" 
               className="w-full" 
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                if (value === "phone") {
+                  resetPhoneFlow();
+                }
+              }}
             >
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="email">Email</TabsTrigger>
@@ -133,7 +238,7 @@ const Auth = () => {
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction"
+                    className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white"
                   >
                     Send Magic Link
                   </Button>
@@ -146,19 +251,50 @@ const Auth = () => {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1234567890"
+                      placeholder="+12345678900"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
+                      disabled={showOtpInput}
                       className="border-gray-300"
                     />
+                    {showOtpInput && (
+                      <div className="pt-2">
+                        <Label htmlFor="otp" className="text-gray-700">Verification Code</Label>
+                        <Input
+                          id="otp"
+                          type="text"
+                          placeholder="123456"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value)}
+                          required
+                          className="border-gray-300 mt-1"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">
+                          For testing, you can use phone number +12345678900 with any OTP
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction"
-                  >
-                    Send OTP
-                  </Button>
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white"
+                    >
+                      {showOtpInput ? "Verify Code" : "Send OTP"}
+                    </Button>
+                    
+                    {showOtpInput && (
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        onClick={resetPhoneFlow}
+                        className="w-full"
+                      >
+                        Change Phone Number
+                      </Button>
+                    )}
+                  </div>
                 </form>
               </TabsContent>
             </Tabs>
