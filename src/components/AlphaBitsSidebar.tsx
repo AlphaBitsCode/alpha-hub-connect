@@ -129,9 +129,11 @@ export const Logo = () => {
       to="/"
       className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
     >
-      <div className="h-6 w-6 bg-white rounded-md flex-shrink-0 flex items-center justify-center">
-        <div className="h-4 w-4 bg-alphabits-darkblue rounded-sm"></div>
-      </div>
+      <img
+        src="https://alphabits.team/images/AB_Logo_white_icon.png"
+        alt="Alpha Hub Logo"
+        className="h-6 w-6 flex-shrink-0 rounded-md"
+      />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -149,9 +151,11 @@ export const LogoIcon = () => {
       to="/"
       className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
     >
-      <div className="h-6 w-6 bg-white rounded-md flex-shrink-0 flex items-center justify-center">
-        <div className="h-4 w-4 bg-alphabits-darkblue rounded-sm"></div>
-      </div>
+      <img
+        src="https://alphabits.team/images/AB_Logo_white_icon.png"
+        alt="Alpha Hub Logo"
+        className="h-6 w-6 flex-shrink-0 rounded-md"
+      />
     </Link>
   );
 };
