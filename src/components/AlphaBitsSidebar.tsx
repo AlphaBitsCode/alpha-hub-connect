@@ -7,26 +7,21 @@ import {
   FolderKanban, 
   Settings, 
   LogOut,
-  PlusCircle,
-  Sun,
-  Moon
+  PlusCircle
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Switch } from "@/components/ui/switch";
+import { SidebarThemeToggle } from "@/components/SidebarThemeToggle";
+import { SidebarUserProfile } from "@/components/SidebarUserProfile";
 
 export function AlphaBitsSidebar() {
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem("theme") === "dark" || 
-    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
-  );
   
   const links = [
     {
@@ -78,27 +73,6 @@ export function AlphaBitsSidebar() {
   const handleSignOut = async () => {
     await signOut();
   };
-
-  const toggleTheme = () => {
-    const newTheme = isDarkMode ? "light" : "dark";
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
-  // Apply theme on initial load
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
   
   const handleNavigation = (path: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -128,48 +102,11 @@ export function AlphaBitsSidebar() {
           <div className="h-px w-full bg-white/20 my-2"></div>
           
           {/* Theme Toggle - Only show when sidebar is open */}
-          {open && (
-            <>
-              <div className="flex items-center justify-between px-2 py-2 text-white">
-                <div className="flex items-center gap-3">
-                  {isDarkMode ? (
-                    <Moon className="h-5 w-5 text-white" />
-                  ) : (
-                    <Sun className="h-5 w-5 text-white" />
-                  )}
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-white text-sm whitespace-pre"
-                  >
-                    {isDarkMode ? "Dark Mode" : "Light Mode"}
-                  </motion.span>
-                </div>
-                <Switch 
-                  checked={isDarkMode} 
-                  onCheckedChange={toggleTheme} 
-                  className="data-[state=checked]:bg-alphabits-teal"
-                />
-              </div>
-              <div className="h-px w-full bg-white/20 my-2"></div>
-            </>
-          )}
+          <SidebarThemeToggle isOpen={open} />
           
-          <SidebarLink
-            link={{
-              label: user?.email?.split('@')[0] || 'User',
-              href: "/settings",
-              icon: (
-                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-alphabits-teal text-white flex items-center justify-center font-bold">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </div>
-              ),
-            }}
-            className={cn(
-              location.pathname === "/settings" && "bg-white/10 font-medium"
-            )}
-            onClick={handleNavigation("/settings")}
+          <SidebarUserProfile 
+            pathname={location.pathname} 
+            onNavigate={handleNavigation} 
           />
           
           <div

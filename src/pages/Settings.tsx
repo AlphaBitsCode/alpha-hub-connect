@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Mail, Phone, Github } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 
 interface MemberProfile {
   id: string;
@@ -26,10 +26,7 @@ interface MemberProfile {
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem("theme") === "dark" || 
-    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
-  );
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
@@ -52,16 +49,8 @@ const Settings = () => {
     enabled: !!user?.id,
   });
 
-  const toggleTheme = () => {
-    const newTheme = isDarkMode ? "light" : "dark";
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+  const handleThemeToggle = () => {
+    const newTheme = toggleTheme();
     
     toast({
       title: `Theme changed to ${newTheme}`,
@@ -131,7 +120,7 @@ const Settings = () => {
                       </div>
                       <Switch 
                         checked={isDarkMode} 
-                        onCheckedChange={toggleTheme} 
+                        onCheckedChange={handleThemeToggle} 
                       />
                     </div>
                   </CardContent>
