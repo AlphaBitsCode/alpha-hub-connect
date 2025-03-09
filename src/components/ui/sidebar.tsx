@@ -163,9 +163,11 @@ export const SidebarLink = ({
 }) => {
   const { open, animate } = useSidebar();
 
-  // Explicitly define display and opacity as primitive values to fix TypeScript error
-  const displayStyle = animate ? (open ? "inline-block" : "none") : "inline-block";
-  const opacityValue = animate ? (open ? 1 : 0) : 1;
+  // Explicitly type the animation properties
+  const animationProps: { display: "none" | "inline-block"; opacity: number } = {
+    display: animate ? (open ? "inline-block" : "none") : "inline-block",
+    opacity: animate ? (open ? 1 : 0) : 1
+  };
 
   return (
     <Link
@@ -178,10 +180,7 @@ export const SidebarLink = ({
     >
       {link.icon}
       <motion.span
-        animate={{
-          display: displayStyle as "none" | "inline-block",
-          opacity: opacityValue as number,
-        }}
+        animate={animationProps}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}
