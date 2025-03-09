@@ -27,23 +27,34 @@ const Auth = () => {
     const handleRedirectResult = async () => {
       if (window.location.hash) {
         setIsProcessing(true);
-        const { data, error } = await supabase.auth.getUser();
+        toast({
+          title: "Processing login",
+          description: "Please wait while we authenticate you...",
+        });
         
-        if (error) {
-          toast({
-            title: "Authentication error",
-            description: error.message,
-            variant: "destructive",
-          });
-          console.error("Error with redirect auth:", error);
-        } else if (data?.user) {
-          toast({
-            title: "Signed in successfully",
-            description: "Welcome back!",
-          });
-          navigate("/");
+        try {
+          // This will fetch the session based on the URL parameters
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Error processing auth redirect:", error);
+            toast({
+              title: "Authentication error",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else if (data?.session) {
+            toast({
+              title: "Signed in successfully",
+              description: "Welcome back!",
+            });
+            navigate("/");
+          }
+        } catch (err) {
+          console.error("Error handling redirect:", err);
+        } finally {
+          setIsProcessing(false);
         }
-        setIsProcessing(false);
       }
     };
     
@@ -138,8 +149,11 @@ const Auth = () => {
 
   if (loading || isProcessing) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-alphabits-teal"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-alphabits-darkblue to-alphabits-teal">
+        <div className="text-center">
+          <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-t-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Please wait...</p>
+        </div>
       </div>
     );
   }
@@ -174,6 +188,7 @@ const Auth = () => {
             <Button
               className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 shadow-sm flex items-center justify-center"
               onClick={handleGoogleSignIn}
+              disabled={isProcessing}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -234,11 +249,13 @@ const Auth = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="border-gray-300"
+                      disabled={isProcessing}
                     />
                   </div>
                   <Button 
                     type="submit" 
                     className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white"
+                    disabled={isProcessing}
                   >
                     Send Magic Link
                   </Button>
@@ -255,7 +272,7 @@ const Auth = () => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
-                      disabled={showOtpInput}
+                      disabled={showOtpInput || isProcessing}
                       className="border-gray-300"
                     />
                     {showOtpInput && (
@@ -268,6 +285,7 @@ const Auth = () => {
                           value={otp}
                           onChange={(e) => setOtp(e.target.value)}
                           required
+                          disabled={isProcessing}
                           className="border-gray-300 mt-1"
                         />
                         <div className="text-xs text-gray-500 mt-1">
@@ -280,6 +298,7 @@ const Auth = () => {
                     <Button 
                       type="submit" 
                       className="w-full bg-alphabits-teal hover:bg-alphabits-teal/90 text-white"
+                      disabled={isProcessing}
                     >
                       {showOtpInput ? "Verify Code" : "Send OTP"}
                     </Button>
@@ -290,6 +309,7 @@ const Auth = () => {
                         variant="outline"
                         onClick={resetPhoneFlow}
                         className="w-full"
+                        disabled={isProcessing}
                       >
                         Change Phone Number
                       </Button>

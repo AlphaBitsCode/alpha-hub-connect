@@ -27,23 +27,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       setLoading(true);
       
-      // Handle OAuth callback and hash params
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error getting session:", error);
-        toast({
-          title: "Authentication error",
-          description: "There was a problem signing you in. Please try again.",
-          variant: "destructive",
-        });
-      } else if (session) {
-        setSession(session);
-        setUser(session.user);
-        navigate("/");
+      try {
+        // Handle OAuth callback and hash params
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          toast({
+            title: "Authentication error",
+            description: "There was a problem signing you in. Please try again.",
+            variant: "destructive",
+          });
+        } else if (session) {
+          setSession(session);
+          setUser(session.user);
+          navigate("/");
+        }
+      } catch (err) {
+        console.error("Authentication initialization error:", err);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     initializeAuth();
@@ -73,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}`,
+            redirectTo: `https://hub.alphabits.team/`, // Updated redirect URL
           },
         });
         
@@ -82,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabase.auth.signInWithOtp({
           email: options.email,
           options: {
-            emailRedirectTo: `${window.location.origin}`,
+            emailRedirectTo: `https://hub.alphabits.team/`, // Updated redirect URL
           },
         });
         
