@@ -11,7 +11,7 @@ import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import NewProject from "./pages/NewProject";
 import ProjectDashboard from "./pages/ProjectDashboard";
-import EditProject from "./pages/EditProject";
+import ProjectSettings from "./pages/ProjectSettings";
 import Members from "./pages/Members";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -74,7 +74,7 @@ const App = () => {
                   path="/projects/edit/:projectId" 
                   element={
                     <ProtectedRoute>
-                      <EditProject />
+                      <ProjectSettings />
                     </ProtectedRoute>
                   } 
                 />

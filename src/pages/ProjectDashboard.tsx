@@ -146,7 +146,7 @@ const ProjectDashboard = () => {
                 className="glass border-white/20 text-white hover:bg-white/10"
                 onClick={() => navigate(`/projects/edit/${projectId}`)}
               >
-                <Edit className="mr-2 h-4 w-4" /> Edit Project
+                <Edit className="mr-2 h-4 w-4" /> Project Settings
               </Button>
             </div>
             
