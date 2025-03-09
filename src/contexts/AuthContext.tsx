@@ -23,12 +23,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Handle initial session and auth state changes
+    const initializeAuth = async () => {
+      setLoading(true);
+      
+      // Check for auth hash in URL (for OAuth redirects)
+      if (window.location.hash && window.location.hash.includes("access_token")) {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error getting session from hash:", error);
+          toast({
+            title: "Authentication error",
+            description: "There was a problem signing you in. Please try again.",
+            variant: "destructive",
+          });
+        } else if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          navigate("/");
+        }
+      } else {
+        // Get initial session if no hash
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      }
+      
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
@@ -40,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate, toast]);
 
   const signIn = async (provider: "google" | "email" | "phone", options?: any) => {
     try {
@@ -87,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message,
         variant: "destructive",
       });
+      console.error("Auth error:", error);
     } finally {
       setLoading(false);
     }
