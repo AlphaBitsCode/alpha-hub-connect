@@ -41,7 +41,7 @@ const EditProject = () => {
   });
 
   // Fetch project data
-  const { isLoading, error } = useQuery({
+  const { isLoading, error, data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
       if (!projectId) throw new Error("Project ID is required");
@@ -83,6 +83,25 @@ const EditProject = () => {
       return project;
     },
     enabled: !!projectId,
+    // This ensures the form data is updated when the query succeeds
+    onSuccess: (data) => {
+      // Format the date for the input field (YYYY-MM-DD)
+      let formattedDate = "";
+      if (data.deadline) {
+        const date = new Date(data.deadline);
+        formattedDate = date.toISOString().split('T')[0];
+      }
+      
+      setFormData({
+        name: data.name || "",
+        client: data.client || "",
+        description: data.description || "",
+        deadline: formattedDate,
+        dashboardUrl: data.google_sheet_id || "",
+        status: data.status || "In Progress",
+        progress: data.progress || 0,
+      });
+    },
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
