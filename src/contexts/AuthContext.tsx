@@ -41,7 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (session) {
           setSession(session);
           setUser(session.user);
-          navigate("/");
+          // Only navigate to root if we're on the auth page
+          if (window.location.pathname === '/auth') {
+            navigate('/');
+          }
         }
       } catch (err) {
         console.error("Authentication initialization error:", err);
