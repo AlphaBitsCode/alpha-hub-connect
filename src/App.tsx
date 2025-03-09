@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProfileCompletion } from "@/components/ProfileCompletion";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import NewProject from "./pages/NewProject";
@@ -27,19 +28,61 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <Index />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
               
               {/* Project Routes */}
-              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-              <Route path="/new-project" element={<ProtectedRoute><NewProject /></ProtectedRoute>} />
-              <Route path="/project/:projectId" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <Projects />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
+              <Route path="/new-project" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <NewProject />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
+              <Route path="/project/:projectId" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <ProjectDashboard />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
               
               {/* Team Routes */}
-              <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+              <Route path="/members" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <Members />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
               
               {/* Settings Routes */}
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <Settings />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
+              <Route path="/settings/profile" element={
+                <ProtectedRoute>
+                  <ProfileCompletion>
+                    <Settings />
+                  </ProfileCompletion>
+                </ProtectedRoute>
+              } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
