@@ -257,7 +257,7 @@ const ProjectDashboard = () => {
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs">
                                 <p className="text-sm">
-                                  To embed your Google Sheet, publish it to the web first. Click "File" {"->"} "Share" {"->"} "Publish to web" in Google Sheets, then copy the Sheet ID.
+                                  To embed your Google Sheet, publish it to the web first. Click "File" {'>'}  "Share" {'>'} "Publish to web" in Google Sheets, then copy the Sheet ID.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -265,7 +265,7 @@ const ProjectDashboard = () => {
                         </CardHeader>
                         <div className="aspect-[4/3] w-full">
                           <iframe
-                            src={`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}/pubhtml?widget=true&headers=false`}
+                            src={`${project.google_sheet_id}`}
                             className="w-full h-full border-0"
                             title={`${project.name} Dashboard`}
                           ></iframe>
@@ -290,7 +290,7 @@ const ProjectDashboard = () => {
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-xs">
                                   <p className="text-sm">
-                                    To embed your Google Sheet, publish it to the web first. Click "File" {"->"} "Share" {"->"} "Publish to web" in Google Sheets, then copy the Sheet ID.
+                                    To embed your Google Sheet, publish it to the web first. Click "File" {'>'}  "Share" {'>'} "Publish to web" in Google Sheets, then copy the Sheet ID.
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
