@@ -135,15 +135,16 @@ export function AlphaBitsSidebar() {
               ) : (
                 <Sun className="h-5 w-5 text-white" />
               )}
-              <motion.span
-                animate={{
-                  display: open ? "inline-block" : "none",
-                  opacity: open ? 1 : 0,
-                }}
-                className="text-white text-sm whitespace-pre"
-              >
-                {isDarkMode ? "Dark Mode" : "Light Mode"}
-              </motion.span>
+              {open && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-white text-sm whitespace-pre"
+                >
+                  {isDarkMode ? "Dark Mode" : "Light Mode"}
+                </motion.span>
+              )}
             </div>
             <Switch 
               checked={isDarkMode} 
@@ -175,15 +176,16 @@ export function AlphaBitsSidebar() {
             onClick={handleSignOut}
           >
             <LogOut className="text-white h-5 w-5 flex-shrink-0" />
-            <motion.span
-              animate={{
-                display: open ? "inline-block" : "none",
-                opacity: open ? 1 : 0,
-              }}
-              className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
-            >
-              Logout
-            </motion.span>
+            {open && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+              >
+                Logout
+              </motion.span>
+            )}
           </div>
         </div>
       </SidebarBody>
