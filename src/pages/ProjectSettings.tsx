@@ -627,6 +627,5 @@ const ProjectSettings = () => {
       </div>
     </div>
   );
-};
 
 export default ProjectSettings;
