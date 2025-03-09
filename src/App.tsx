@@ -79,6 +79,16 @@ const App = () => {
                   } 
                 />
                 
+                {/* Add the direct path that shows in the URL when navigating */}
+                <Route 
+                  path="/project/edit/:projectId" 
+                  element={
+                    <ProtectedRoute>
+                      <ProjectSettings />
+                    </ProtectedRoute>
+                  } 
+                />
+                
                 {/* Team Routes */}
                 <Route 
                   path="/members" 

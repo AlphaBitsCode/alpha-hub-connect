@@ -4,15 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Plus, 
-  Search, 
   Filter, 
   Clock, 
   CheckCircle, 
   AlertCircle, 
-  FileSpreadsheet,
-  ExternalLink
+  Calendar,
+  MessageSquare
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +33,6 @@ const Projects = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
   
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
@@ -56,15 +53,6 @@ const Projects = () => {
       return data as Project[];
     },
     enabled: !!user,
-  });
-
-  const filteredProjects = projects.filter(project => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      project.name.toLowerCase().includes(searchLower) ||
-      project.client.toLowerCase().includes(searchLower) ||
-      (project.status && project.status.toLowerCase().includes(searchLower))
-    );
   });
 
   if (isLoading || authLoading) {
@@ -102,40 +90,51 @@ const Projects = () => {
               </div>
             </div>
 
-            {/* Search and Filter */}
-            <div className="mb-6 flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                <Input 
-                  placeholder="Search projects..." 
-                  className="pl-9 glass border-white/20 text-white placeholder:text-white/60"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+            {/* Status Filter */}
+            <div className="mb-6 flex justify-end">
               <Button variant="outline" className="flex gap-2 glass border-white/20 text-white hover:bg-white/10">
-                <Filter className="h-4 w-4" /> Filters
+                <Filter className="h-4 w-4" /> Status Filter
               </Button>
             </div>
 
-            {/* Project Tabs */}
+            {/* Project Tabs with improved contrast */}
             <Tabs defaultValue="all" className="mb-6">
               <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-white/10 p-1 backdrop-blur-md">
-                <TabsTrigger value="all" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">All Projects</TabsTrigger>
-                <TabsTrigger value="active" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">Active</TabsTrigger>
-                <TabsTrigger value="completed" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">Completed</TabsTrigger>
-                <TabsTrigger value="atrisk" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">At Risk</TabsTrigger>
+                <TabsTrigger 
+                  value="all" 
+                  className="rounded-md text-white font-medium data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction"
+                >
+                  All Projects
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="active" 
+                  className="rounded-md text-white font-medium data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction"
+                >
+                  Active
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="completed" 
+                  className="rounded-md text-white font-medium data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction"
+                >
+                  Completed
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="atrisk" 
+                  className="rounded-md text-white font-medium data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction"
+                >
+                  At Risk
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="all" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredProjects.length > 0 ? (
-                    filteredProjects.map((project) => (
+                  {projects.length > 0 ? (
+                    projects.map((project) => (
                       <ProjectCard key={project.id} project={project} />
                     ))
                   ) : (
                     <div className="col-span-full flex justify-center py-10">
-                      <p className="text-white/70">No projects found. Adjust your search or create a new project.</p>
+                      <p className="text-white/70">No projects found. Create a new project to get started.</p>
                     </div>
                   )}
                 </div>
@@ -143,7 +142,7 @@ const Projects = () => {
               
               <TabsContent value="active" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredProjects
+                  {projects
                     .filter(p => p.status === "In Progress")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
@@ -153,7 +152,7 @@ const Projects = () => {
               
               <TabsContent value="completed" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredProjects
+                  {projects
                     .filter(p => p.status === "Completed")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
@@ -163,7 +162,7 @@ const Projects = () => {
               
               <TabsContent value="atrisk" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredProjects
+                  {projects
                     .filter(p => p.status === "At Risk")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
@@ -184,11 +183,11 @@ const ProjectCard = ({ project }: { project: Project }) => {
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case "Completed":
-        return "bg-green-500/20 text-green-300";
+        return "bg-green-500/30 text-green-100 border border-green-400/30";
       case "At Risk":
-        return "bg-red-500/20 text-red-300";
+        return "bg-red-500/30 text-red-100 border border-red-400/30";
       default:
-        return "bg-blue-500/20 text-blue-300";
+        return "bg-blue-500/30 text-blue-100 border border-blue-400/30";
     }
   };
 
@@ -203,14 +202,11 @@ const ProjectCard = ({ project }: { project: Project }) => {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "No deadline";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  // Mock upcoming tasks/milestones - In a real app, this would be fetched from the database
+  const upcomingTasks = [
+    { type: 'task', title: 'Team meeting', date: '2023-10-15' },
+    { type: 'milestone', title: 'Design review', date: '2023-10-20' }
+  ];
 
   return (
     <Card 
@@ -221,10 +217,10 @@ const ProjectCard = ({ project }: { project: Project }) => {
         <CardTitle className="flex items-center justify-between">
           <span className="text-base font-semibold text-white">{project.name}</span>
           <span 
-            className={`text-xs px-2 py-1 rounded-full flex items-center ${getStatusColor(project.status)}`}
+            className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${getStatusColor(project.status)}`}
           >
             {getStatusIcon(project.status)}
-            <span className="ml-1">{project.status}</span>
+            <span>{project.status}</span>
           </span>
         </CardTitle>
       </CardHeader>
@@ -235,40 +231,39 @@ const ProjectCard = ({ project }: { project: Project }) => {
         </div>
         
         <div className="mb-4">
-          <div className="text-sm text-white/70 mb-1">Deadline</div>
-          <div className="font-medium flex items-center text-white">
-            <Clock className="h-4 w-4 mr-1 text-white/70" /> {formatDate(project.deadline)}
+          <div className="text-sm text-white/70 mb-1 flex items-center">
+            <Calendar className="h-4 w-4 mr-1 text-white/70" /> Upcoming
           </div>
+          <ul className="space-y-2 mt-2">
+            {upcomingTasks.map((item, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm">
+                {item.type === 'milestone' ? (
+                  <div className="h-3 w-3 bg-alphabits-teal rounded-full mt-1 flex-shrink-0" />
+                ) : (
+                  <div className="h-3 w-3 border border-white/40 rounded-full mt-1 flex-shrink-0" />
+                )}
+                <div>
+                  <span className="text-white font-medium">{item.title}</span>
+                  <div className="text-white/60 text-xs">{new Date(item.date).toLocaleDateString()}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
         
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-white/70">Progress</span>
-            <span className="text-sm font-medium text-white">{project.progress || 0}%</span>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-2">
-            <div
-              className="bg-alphabits-teal h-2 rounded-full"
-              style={{ width: `${project.progress || 0}%` }}
-            ></div>
-          </div>
+        <div className="mt-4 pt-3 border-t border-white/10">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-center glass border-white/20 text-white hover:bg-white/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/project/${project.id}`);
+            }}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" /> View Project
+          </Button>
         </div>
-        
-        {project.google_sheet_id && (
-          <div className="mt-4 pt-3 border-t border-white/10">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-center glass border-white/20 text-white hover:bg-white/10"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent navigating to project details
-                window.open(`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}`, '_blank');
-              }}
-            >
-              <FileSpreadsheet className="mr-2 h-4 w-4" /> View Dashboard
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

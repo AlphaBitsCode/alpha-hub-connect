@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, AlertCircle, HelpCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -19,6 +20,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Project {
   id: string;
@@ -167,6 +174,39 @@ const ProjectSettings = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Delete the project from the database
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Project deleted",
+        description: "The project has been successfully deleted.",
+      });
+      
+      // Navigate back to the projects list
+      navigate('/projects');
+    } catch (error: any) {
+      toast({
+        title: "Error deleting project",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen w-full">
@@ -308,19 +348,40 @@ const ProjectSettings = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="dashboardUrl" className="text-white">
-                      Dashboard URL (Google Sheet ID or External Dashboard)
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="dashboardUrl" className="text-white">
+                        Google Sheet ID for Dashboard
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                              onClick={() => window.open('https://support.google.com/docs/answer/183965?hl=en&co=GENIE.Platform%3DDesktop', '_blank')}
+                            >
+                              <HelpCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-sm">
+                              To embed your Google Sheet, publish it to the web first. Click "File" {"→"} "Share" {"→"} "Publish to web" in Google Sheets, then copy the Sheet ID.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Input
                       id="dashboardUrl"
                       name="dashboardUrl"
-                      placeholder="Enter URL or Sheet ID"
+                      placeholder="Enter Google Sheet ID"
                       value={formData.dashboardUrl}
                       onChange={handleChange}
                       className="glass border-white/20 text-white placeholder:text-white/60"
                     />
                     <p className="text-white/60 text-xs">
-                      For Google Sheets, enter the Sheet ID from the URL (the long string between /d/ and /edit)
+                      Enter the Sheet ID from the URL (the long string between /d/ and /edit)
                     </p>
                   </div>
                 </CardContent>
@@ -397,39 +458,5 @@ const ProjectSettings = () => {
     </div>
   );
 };
-
-  // Function to handle project deletion
-  const handleDeleteProject = async () => {
-    if (!projectId) return;
-    
-    try {
-      setIsDeleting(true);
-      
-      // Delete the project from the database
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Project deleted",
-        description: "The project has been successfully deleted.",
-      });
-      
-      // Navigate back to the projects list
-      navigate('/projects');
-    } catch (error: any) {
-      toast({
-        title: "Error deleting project",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
-    }
-  };
 
 export default ProjectSettings;

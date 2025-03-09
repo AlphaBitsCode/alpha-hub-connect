@@ -178,16 +178,16 @@ export const SidebarLink: React.FC<SidebarLinkProps> = ({
     >
       {link.icon}
       {animate ? (
-        <motion.span
-          initial={{ opacity: open ? 1 : 0 }}
-          animate={{ 
-            opacity: open ? 1 : 0,
-            display: open ? "block" : "none"
-          }}
-          className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
-        >
-          {link.label}
-        </motion.span>
+        open && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
+          >
+            {link.label}
+          </motion.span>
+        )
       ) : (
         <span className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre">
           {link.label}

@@ -127,33 +127,34 @@ export function AlphaBitsSidebar() {
         <div className="space-y-2">
           <div className="h-px w-full bg-white/20 my-2"></div>
           
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-between px-2 py-2 text-white">
-            <div className="flex items-center gap-3">
-              {isDarkMode ? (
-                <Moon className="h-5 w-5 text-white" />
-              ) : (
-                <Sun className="h-5 w-5 text-white" />
-              )}
-              {open && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-white text-sm whitespace-pre"
-                >
-                  {isDarkMode ? "Dark Mode" : "Light Mode"}
-                </motion.span>
-              )}
-            </div>
-            <Switch 
-              checked={isDarkMode} 
-              onCheckedChange={toggleTheme} 
-              className="data-[state=checked]:bg-alphabits-teal"
-            />
-          </div>
-          
-          <div className="h-px w-full bg-white/20 my-2"></div>
+          {/* Theme Toggle - Only show when sidebar is open */}
+          {open && (
+            <>
+              <div className="flex items-center justify-between px-2 py-2 text-white">
+                <div className="flex items-center gap-3">
+                  {isDarkMode ? (
+                    <Moon className="h-5 w-5 text-white" />
+                  ) : (
+                    <Sun className="h-5 w-5 text-white" />
+                  )}
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-white text-sm whitespace-pre"
+                  >
+                    {isDarkMode ? "Dark Mode" : "Light Mode"}
+                  </motion.span>
+                </div>
+                <Switch 
+                  checked={isDarkMode} 
+                  onCheckedChange={toggleTheme} 
+                  className="data-[state=checked]:bg-alphabits-teal"
+                />
+              </div>
+              <div className="h-px w-full bg-white/20 my-2"></div>
+            </>
+          )}
           
           <SidebarLink
             link={{
