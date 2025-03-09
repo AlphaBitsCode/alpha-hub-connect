@@ -117,54 +117,13 @@
     @apply transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98];
   }
 
-  /* Light theme specific classes */
-  .light .glass {
-    @apply bg-white/80 border-gray-200 text-gray-900;
-  }
-  
-  .light .glass-card {
-    @apply bg-white/80 border-gray-200 text-gray-900;
-  }
-  
-  .light .glass-sidebar {
-    @apply bg-alphabits-darkblue/90;
-  }
-  
-  .light .text-white {
-    @apply text-white;  /* Keep sidebar text white even in light mode */
-  }
-  
-  .light .card-content {
-    @apply text-gray-900;
+  /* Add spacing for content to account for fixed sidebar */
+  .main-content {
+    @apply md:ml-[70px] transition-all duration-300;
   }
 
-  .light input::placeholder {
-    @apply text-gray-500;
-  }
-  
-  .light .card-title {
-    @apply text-gray-900;
-  }
-  
-  .light .card-description {
-    @apply text-gray-600;
-  }
-  
-  /* Dark theme maintains existing styles */
-  .dark .glass {
-    @apply bg-white/10 border-white/20 text-white;
-  }
-  
-  .dark .card-content {
-    @apply text-white;
-  }
-  
-  .dark .card-title {
-    @apply text-white;
-  }
-  
-  .dark .card-description {
-    @apply text-white/70;
+  .main-content-expanded {
+    @apply md:ml-[300px];
   }
 }
 
@@ -179,7 +138,7 @@
 
 /* Adjust the content area to work with the fixed sidebar */
 main {
-  @apply w-full transition-all duration-300 ease-in-out;
+  @apply ml-0 md:ml-[70px] w-full transition-all duration-300 ease-in-out;
 }
 
 /* Apply page padding consistently */

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import React, { useState, createContext, useContext } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 interface Links {
   label: string;
@@ -17,8 +17,6 @@ interface SidebarContextProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   animate: boolean;
-  theme: 'light' | 'dark';
-  toggleTheme: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(
@@ -45,39 +43,12 @@ export const SidebarProvider = ({
   animate?: boolean;
 }) => {
   const [openState, setOpenState] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    localStorage.getItem("theme") === "light" || 
-    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: light)").matches) 
-      ? 'light' 
-      : 'dark'
-  );
 
   const open = openProp !== undefined ? openProp : openState;
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
-  // Initialize theme on mount
-  React.useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
-
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate, theme, toggleTheme }}>
+    <SidebarContext.Provider value={{ open, setOpen, animate }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -119,8 +90,7 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "fixed h-screen px-4 py-4 hidden md:flex md:flex-col rounded-r-2xl z-50 shadow-xl",
-        "bg-alphabits-darkblue/85 backdrop-blur-xl border border-white/10",
+        "fixed h-screen px-4 py-4 hidden md:flex md:flex-col modern-glass-sidebar rounded-r-xl z-50",
         className
       )}
       initial={{ width: animate ? (open ? "300px" : "70px") : "300px" }}
@@ -146,8 +116,7 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between w-full z-50",
-          "bg-alphabits-darkblue/85 backdrop-blur-xl border-b border-white/10 sticky top-0"
+          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between modern-glass-sidebar w-full rounded-b-xl"
         )}
       >
         <div className="flex justify-end z-20 w-full">
@@ -164,8 +133,7 @@ export const MobileSidebar = ({
             ease: "easeInOut",
           }}
           className={cn(
-            "fixed h-full w-full inset-0 p-10 z-[100] flex flex-col justify-between backdrop-blur-xl",
-            "bg-alphabits-darkblue/90 border-r border-white/10",
+            "fixed h-full w-full inset-0 modern-glass-sidebar p-10 z-[100] flex flex-col justify-between backdrop-blur-xl",
             className,
             open ? "block" : "hidden"
           )}
@@ -184,67 +152,39 @@ export const MobileSidebar = ({
   );
 };
 
-interface SidebarLinkProps {
-  link: Links;
-  className?: string;
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
-}
-
 export const SidebarLink = ({
   link,
   className,
-  onClick,
   ...props
-}: SidebarLinkProps) => {
+}: {
+  link: Links;
+  className?: string;
+  props?: any;
+}) => {
   const { open, animate } = useSidebar();
+
+  // Explicitly type the animation properties
+  const animationProps: { display: "none" | "inline-block"; opacity: number } = {
+    display: animate ? (open ? "inline-block" : "none") : "inline-block",
+    opacity: animate ? (open ? 1 : 0) : 1
+  };
 
   return (
     <Link
       to={link.href}
       className={cn(
-        "flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 cursor-pointer transition-all group/sidebar",
+        "flex items-center justify-start gap-3 group/sidebar py-2 px-2 rounded-lg hover:bg-white/10 transition-all",
         className
       )}
-      onClick={onClick}
       {...props}
     >
       {link.icon}
       <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
+        animate={animationProps}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}
       </motion.span>
     </Link>
-  );
-};
-
-export const ThemeToggle = () => {
-  const { open, animate, theme, toggleTheme } = useSidebar();
-  
-  // Fix TypeScript error by using a string/number directly
-  const display = animate ? (open ? "inline-block" : "none") : "inline-block";
-  const opacity = animate ? (open ? 1 : 0) : 1;
-  
-  return (
-    <div 
-      className="flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 transition-all duration-300 cursor-pointer"
-      onClick={toggleTheme}
-    >
-      {theme === 'dark' ? (
-        <Moon className="text-white h-5 w-5 flex-shrink-0" />
-      ) : (
-        <Sun className="text-white h-5 w-5 flex-shrink-0" />
-      )}
-      <motion.span
-        animate={{ display, opacity }}
-        className="text-white text-sm transition duration-150 whitespace-pre inline-block !p-0 !m-0"
-      >
-        {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-      </motion.span>
-    </div>
   );
 };

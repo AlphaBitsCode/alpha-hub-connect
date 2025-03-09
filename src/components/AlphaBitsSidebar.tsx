@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Sidebar, SidebarBody, SidebarLink, ThemeToggle } from "@/components/ui/sidebar";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
   Users, 
@@ -9,19 +9,16 @@ import {
   LogOut,
   PlusCircle
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/components/ui/use-toast";
 
 export function AlphaBitsSidebar() {
   const { signOut, user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
   const links = [
     {
       label: "Dashboard",
@@ -72,11 +69,6 @@ export function AlphaBitsSidebar() {
   const handleSignOut = async () => {
     await signOut();
   };
-
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    navigate(href);
-  };
   
   return (
     <Sidebar open={open} setOpen={setOpen}>
@@ -92,7 +84,6 @@ export function AlphaBitsSidebar() {
                   "sidebar-link",
                   location.pathname === link.href && "bg-white/10 font-medium"
                 )}
-                onClick={(e) => handleLinkClick(e, link.href)}
               />
             ))}
           </div>
@@ -113,11 +104,7 @@ export function AlphaBitsSidebar() {
             className={cn(
               location.pathname === "/settings" && "bg-white/10 font-medium"
             )}
-            onClick={(e) => handleLinkClick(e, "/settings")}
           />
-          
-          {/* Theme Toggle */}
-          <ThemeToggle />
           
           <div
             className="flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 cursor-pointer transition-all group/sidebar"
