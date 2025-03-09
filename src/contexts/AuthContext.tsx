@@ -27,21 +27,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       setLoading(true);
       
-      // Check for auth hash in URL (for OAuth redirects)
-      if (window.location.hash && window.location.hash.includes("access_token")) {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Error getting session from hash:", error);
-          toast({
-            title: "Authentication error",
-            description: "There was a problem signing you in. Please try again.",
-            variant: "destructive",
-          });
-        } else if (data.session) {
-          setSession(data.session);
-          setUser(data.session.user);
-          navigate("/");
-        }
+      // Handle OAuth callback
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error getting session:", error);
+        toast({
+          title: "Authentication error",
+          description: "There was a problem signing you in. Please try again.",
+          variant: "destructive",
+        });
+      } else if (session) {
+        setSession(session);
+        setUser(session.user);
+        navigate("/");
+      }
       } else {
         // Get initial session if no hash
         const { data } = await supabase.auth.getSession();
