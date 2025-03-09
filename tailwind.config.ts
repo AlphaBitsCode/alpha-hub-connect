@@ -64,8 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				alphabits: {
-					purple: '#6366F1',
-					blue: '#3B82F6',
+					darkblue: '#2E335B',
+					blue: '#314C79',
+					teal: '#2695A2',
+					green: '#58BEA2',
 					lightgray: '#F3F4F6',
 					darkgray: '#4B5563',
 				}

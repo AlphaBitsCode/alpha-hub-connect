@@ -14,8 +14,10 @@ import {
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AlphaBitsSidebar() {
+  const { signOut, user } = useAuth();
   const links = [
     {
       label: "Dashboard",
@@ -66,16 +68,13 @@ export function AlphaBitsSidebar() {
         <Settings className="text-white h-5 w-5 flex-shrink-0" />
       ),
     },
-    {
-      label: "Logout",
-      href: "/logout",
-      icon: (
-        <LogOut className="text-white h-5 w-5 flex-shrink-0" />
-      ),
-    },
   ];
   
   const [open, setOpen] = useState(false);
+  
+  const handleSignOut = async () => {
+    await signOut();
+  };
   
   return (
     <Sidebar open={open} setOpen={setOpen}>
@@ -88,18 +87,36 @@ export function AlphaBitsSidebar() {
             ))}
           </div>
         </div>
-        <div>
+        <div className="space-y-2">
+          <div className="h-px w-full bg-white/20 my-2"></div>
+          
           <SidebarLink
             link={{
-              label: "John Doe",
+              label: user?.email?.split('@')[0] || 'User',
               href: "/profile",
               icon: (
-                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white text-alphabits-purple flex items-center justify-center font-bold">
-                  JD
+                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white text-alphabits-darkblue flex items-center justify-center font-bold">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               ),
             }}
           />
+          
+          <div
+            className="flex items-center justify-start gap-2 group/sidebar py-2 cursor-pointer micro-interaction"
+            onClick={handleSignOut}
+          >
+            <LogOut className="text-white h-5 w-5 flex-shrink-0" />
+            <motion.span
+              animate={{
+                display: open ? "inline-block" : "none",
+                opacity: open ? 1 : 0,
+              }}
+              className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+            >
+              Logout
+            </motion.span>
+          </div>
         </div>
       </SidebarBody>
     </Sidebar>
@@ -113,7 +130,7 @@ export const Logo = () => {
       className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
     >
       <div className="h-6 w-6 bg-white rounded-md flex-shrink-0 flex items-center justify-center">
-        <div className="h-4 w-4 bg-alphabits-purple rounded-sm"></div>
+        <div className="h-4 w-4 bg-alphabits-darkblue rounded-sm"></div>
       </div>
       <motion.span
         initial={{ opacity: 0 }}
@@ -133,7 +150,7 @@ export const LogoIcon = () => {
       className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
     >
       <div className="h-6 w-6 bg-white rounded-md flex-shrink-0 flex items-center justify-center">
-        <div className="h-4 w-4 bg-alphabits-purple rounded-sm"></div>
+        <div className="h-4 w-4 bg-alphabits-darkblue rounded-sm"></div>
       </div>
     </Link>
   );

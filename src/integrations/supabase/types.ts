@@ -87,6 +87,39 @@ export type Database = {
         }
         Relationships: []
       }
+      members: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       preorders: {
         Row: {
           address: string
@@ -120,6 +153,87 @@ export type Database = {
           name?: string
           quantity?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      project_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          member_id: string
+          project_id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          member_id: string
+          project_id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          project_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client: string
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          google_sheet_id: string | null
+          google_sheet_range: string | null
+          id: string
+          name: string
+          progress: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          google_sheet_id?: string | null
+          google_sheet_range?: string | null
+          id?: string
+          name: string
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          google_sheet_id?: string | null
+          google_sheet_range?: string | null
+          id?: string
+          name?: string
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
