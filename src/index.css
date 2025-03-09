@@ -109,7 +109,39 @@
     @apply bg-alphabits-darkblue/90 backdrop-blur-md backdrop-filter border-r border-white/10;
   }
 
+  .modern-glass-sidebar {
+    @apply bg-alphabits-darkblue/75 backdrop-blur-xl backdrop-filter border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+  }
+
   .micro-interaction {
     @apply transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98];
   }
+
+  /* Add spacing for content to account for fixed sidebar */
+  .main-content {
+    @apply md:ml-[70px] transition-all duration-300;
+  }
+
+  .main-content-expanded {
+    @apply md:ml-[300px];
+  }
+}
+
+/* App-specific styles */
+#root {
+  @apply max-w-none p-0 m-0 w-full text-left;
+}
+
+.sidebar-link.active {
+  @apply bg-white/10 font-medium;
+}
+
+/* Adjust the content area to work with the fixed sidebar */
+main {
+  @apply ml-0 md:ml-[70px] w-full transition-all duration-300 ease-in-out;
+}
+
+/* Apply page padding consistently */
+.page-container {
+  @apply p-4 md:p-6;
 }

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -9,13 +9,16 @@ import {
   LogOut,
   PlusCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AlphaBitsSidebar() {
   const { signOut, user } = useAuth();
+  const location = useLocation();
+  const isMobile = useIsMobile();
   const links = [
     {
       label: "Dashboard",
@@ -56,6 +59,13 @@ export function AlphaBitsSidebar() {
   
   const [open, setOpen] = useState(false);
   
+  // Close sidebar on route change for mobile
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+  
   const handleSignOut = async () => {
     await signOut();
   };
@@ -67,7 +77,14 @@ export function AlphaBitsSidebar() {
           {open ? <Logo /> : <LogoIcon />}
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => (
-              <SidebarLink key={idx} link={link} />
+              <SidebarLink 
+                key={idx} 
+                link={link} 
+                className={cn(
+                  "sidebar-link",
+                  location.pathname === link.href && "bg-white/10 font-medium"
+                )}
+              />
             ))}
           </div>
         </div>
@@ -79,15 +96,18 @@ export function AlphaBitsSidebar() {
               label: user?.email?.split('@')[0] || 'User',
               href: "/settings",
               icon: (
-                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white text-alphabits-darkblue flex items-center justify-center font-bold">
+                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-alphabits-teal text-white flex items-center justify-center font-bold">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               ),
             }}
+            className={cn(
+              location.pathname === "/settings" && "bg-white/10 font-medium"
+            )}
           />
           
           <div
-            className="flex items-center justify-start gap-2 group/sidebar py-2 cursor-pointer micro-interaction"
+            className="flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 cursor-pointer transition-all group/sidebar"
             onClick={handleSignOut}
           >
             <LogOut className="text-white h-5 w-5 flex-shrink-0" />
@@ -116,12 +136,12 @@ export const Logo = () => {
       <img
         src="https://alphabits.team/images/AB_Logo_white_icon.png"
         alt="Alpha Hub Logo"
-        className="h-6 w-6 flex-shrink-0 rounded-md"
+        className="h-8 w-8 flex-shrink-0 rounded-md"
       />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium text-white whitespace-pre"
+        className="font-medium text-white whitespace-pre text-lg"
       >
         Alpha Hub
       </motion.span>
@@ -138,7 +158,7 @@ export const LogoIcon = () => {
       <img
         src="https://alphabits.team/images/AB_Logo_white_icon.png"
         alt="Alpha Hub Logo"
-        className="h-6 w-6 flex-shrink-0 rounded-md"
+        className="h-8 w-8 flex-shrink-0 rounded-md"
       />
     </Link>
   );

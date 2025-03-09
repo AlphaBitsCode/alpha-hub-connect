@@ -22,26 +22,28 @@ const App = () => (
     <BrowserRouter>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            
-            {/* Project Routes */}
-            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-            <Route path="/new-project" element={<ProtectedRoute><NewProject /></ProtectedRoute>} />
-            <Route path="/project/:projectId" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
-            
-            {/* Team Routes */}
-            <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
-            
-            {/* Settings Routes */}
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen w-full">
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              
+              {/* Project Routes */}
+              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+              <Route path="/new-project" element={<ProtectedRoute><NewProject /></ProtectedRoute>} />
+              <Route path="/project/:projectId" element={<ProtectedRoute><ProjectDashboard /></ProtectedRoute>} />
+              
+              {/* Team Routes */}
+              <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+              
+              {/* Settings Routes */}
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/settings/profile" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>

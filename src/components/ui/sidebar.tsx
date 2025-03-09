@@ -4,7 +4,7 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import React, { useState, createContext, useContext } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 interface Links {
@@ -90,11 +90,12 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col glass-sidebar w-[300px] flex-shrink-0",
+        "fixed h-screen px-4 py-4 hidden md:flex md:flex-col modern-glass-sidebar rounded-r-xl z-50",
         className
       )}
+      initial={{ width: animate ? (open ? "300px" : "70px") : "300px" }}
       animate={{
-        width: animate ? (open ? "300px" : "60px") : "300px",
+        width: animate ? (open ? "300px" : "70px") : "300px",
       }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -115,7 +116,7 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between glass-sidebar w-full"
+          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between modern-glass-sidebar w-full rounded-b-xl"
         )}
       >
         <div className="flex justify-end z-20 w-full">
@@ -132,7 +133,7 @@ export const MobileSidebar = ({
             ease: "easeInOut",
           }}
           className={cn(
-            "fixed h-full w-full inset-0 glass-sidebar p-10 z-[100] flex flex-col justify-between",
+            "fixed h-full w-full inset-0 modern-glass-sidebar p-10 z-[100] flex flex-col justify-between backdrop-blur-xl",
             className,
             open ? "block" : "hidden"
           )}
@@ -161,16 +162,16 @@ export const SidebarLink = ({
   props?: any;
 }) => {
   const { open, animate } = useSidebar();
-  
-  // Fix for the TypeScript error - explicitly define display and opacity as primitive values
-  const displayValue = animate ? (open ? "inline-block" : "none") : "inline-block";
+
+  // Explicitly define display and opacity as primitive values to fix TypeScript error
+  const displayStyle = animate ? (open ? "inline-block" : "none") : "inline-block";
   const opacityValue = animate ? (open ? 1 : 0) : 1;
-  
+
   return (
     <Link
       to={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2 micro-interaction",
+        "flex items-center justify-start gap-3 group/sidebar py-2 px-2 rounded-lg hover:bg-white/10 transition-all",
         className
       )}
       {...props}
@@ -178,8 +179,8 @@ export const SidebarLink = ({
       {link.icon}
       <motion.span
         animate={{
-          display: displayValue,
-          opacity: opacityValue,
+          display: displayStyle as "none" | "inline-block",
+          opacity: opacityValue as number,
         }}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
