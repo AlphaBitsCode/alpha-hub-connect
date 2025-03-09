@@ -182,16 +182,17 @@ main {
 
 /* Light mode fixes */
 :root:not(.dark) .bg-gradient-to-br {
-  @apply text-gray-800;
+  color: #4b5563; /* text-gray-800 equivalent */
 }
 
+/* Fix the circular dependency by not using @apply */
 :root:not(.dark) .text-white {
-  @apply text-gray-800;
+  color: #4b5563; /* text-gray-800 equivalent */
 }
 
 /* Exception for the sidebar where we want to keep white text */
 .modern-glass-sidebar .text-white,
 .glass-sidebar .text-white,
 .sidebar-link .text-white {
-  @apply text-white !important;
+  color: white !important;
 }

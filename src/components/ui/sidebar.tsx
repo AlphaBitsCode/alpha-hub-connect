@@ -161,8 +161,7 @@ export const SidebarLink = ({
   link: Links;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
-  props?: any;
-}) => {
+} & React.HTMLAttributes<HTMLAnchorElement>) => {
   const { open, animate } = useSidebar();
 
   return (

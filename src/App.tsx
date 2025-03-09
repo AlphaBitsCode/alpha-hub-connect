@@ -39,7 +39,7 @@ const App = () => {
                   path="/" 
                   element={
                     <ProtectedRoute>
-                      <Index onProfileCheck={setIsProfileComplete} />
+                      <Index />
                     </ProtectedRoute>
                   } 
                 />
@@ -49,7 +49,7 @@ const App = () => {
                   path="/projects" 
                   element={
                     <ProtectedRoute>
-                      <Projects onProfileCheck={setIsProfileComplete} />
+                      <Projects />
                     </ProtectedRoute>
                   } 
                 />
@@ -57,7 +57,7 @@ const App = () => {
                   path="/new-project" 
                   element={
                     <ProtectedRoute>
-                      <NewProject onProfileCheck={setIsProfileComplete} />
+                      <NewProject />
                     </ProtectedRoute>
                   } 
                 />
@@ -65,7 +65,7 @@ const App = () => {
                   path="/project/:projectId" 
                   element={
                     <ProtectedRoute>
-                      <ProjectDashboard onProfileCheck={setIsProfileComplete} />
+                      <ProjectDashboard />
                     </ProtectedRoute>
                   } 
                 />
@@ -75,7 +75,7 @@ const App = () => {
                   path="/members" 
                   element={
                     <ProtectedRoute>
-                      <Members onProfileCheck={setIsProfileComplete} />
+                      <Members />
                     </ProtectedRoute>
                   } 
                 />
@@ -85,7 +85,7 @@ const App = () => {
                   path="/settings" 
                   element={
                     <ProtectedRoute>
-                      <Settings onProfileCheck={setIsProfileComplete} />
+                      <Settings />
                     </ProtectedRoute>
                   } 
                 />
@@ -93,7 +93,7 @@ const App = () => {
                   path="/settings/profile" 
                   element={
                     <ProtectedRoute>
-                      <Settings onProfileCheck={setIsProfileComplete} />
+                      <Settings />
                     </ProtectedRoute>
                   } 
                 />
