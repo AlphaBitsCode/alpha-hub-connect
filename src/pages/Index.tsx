@@ -1,194 +1,198 @@
 
+import { useEffect } from 'react';
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  BarChart, 
-  Calendar, 
-  ChevronRight, 
-  Clock, 
-  Folder, 
-  MessageCircle, 
-  Plus, 
-  Users 
-} from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-const Index = () => {
-  const isMobile = useIsMobile();
+interface IndexProps {
+  onProfileCheck?: (isComplete: boolean) => void;
+}
+
+const Index = ({ onProfileCheck }: IndexProps) => {
+  const { user } = useAuth();
+
+  // Query to fetch user profile
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('members')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Query to fetch user's projects
+  const { data: projects } = useQuery({
+    queryKey: ['projects', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      // Get projects where user is a member
+      const { data: memberProjects, error: memberError } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('member_id', user.id);
+      
+      if (memberError) {
+        console.error("Error fetching member projects:", memberError);
+        return [];
+      }
+      
+      if (!memberProjects.length) return [];
+      
+      // Get actual project details
+      const projectIds = memberProjects.map(pm => pm.project_id);
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select('*')
+        .in('id', projectIds)
+        .order('created_at', { ascending: false });
+      
+      if (projectsError) {
+        console.error("Error fetching projects:", projectsError);
+        return [];
+      }
+      
+      return projectsData;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Check if profile is complete
+  useEffect(() => {
+    if (profile && onProfileCheck) {
+      const isComplete = !!profile.full_name && !!profile.email;
+      onProfileCheck(isComplete);
+    }
+  }, [profile, onProfileCheck]);
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gray-50">
-      <div className="flex flex-1 w-full">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-alphabits-darkblue via-alphabits-blue to-alphabits-teal">
+      <div className="flex flex-1">
         <AlphaBitsSidebar />
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-500">Welcome back, John Doe</p>
-              </div>
-              <div className="mt-4 md:mt-0">
-                <Button className="bg-alphabits-purple hover:bg-alphabits-purple/90">
-                  <Plus className="mr-2 h-4 w-4" /> New Project
-                </Button>
-              </div>
-            </div>
-
-            {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-500">Active Projects</CardTitle>
+        
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-3xl font-bold text-white mb-6">
+              Welcome, {profile?.full_name || user?.email?.split('@')[0] || 'User'}
+            </h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <Card className="glass-card border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-gray-800 dark:text-white">Active Projects</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-white/70">
+                    Projects currently in progress
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">12</span>
-                    <Folder className="h-5 w-5 text-alphabits-purple" />
-                  </div>
+                  <p className="text-4xl font-bold text-gray-800 dark:text-white">
+                    {projects?.filter(p => p.status === 'In Progress').length || 0}
+                  </p>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-500">Team Members</CardTitle>
+              
+              <Card className="glass-card border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-gray-800 dark:text-white">Completed Projects</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-white/70">
+                    Successfully completed projects
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">24</span>
-                    <Users className="h-5 w-5 text-alphabits-purple" />
-                  </div>
+                  <p className="text-4xl font-bold text-gray-800 dark:text-white">
+                    {projects?.filter(p => p.status === 'Completed').length || 0}
+                  </p>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-500">Upcoming Deadlines</CardTitle>
+              
+              <Card className="glass-card border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-gray-800 dark:text-white">Upcoming Deadlines</CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-white/70">
+                    Projects due in the next 7 days
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">5</span>
-                    <Clock className="h-5 w-5 text-alphabits-purple" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-500">Unread Messages</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">18</span>
-                    <MessageCircle className="h-5 w-5 text-alphabits-purple" />
-                  </div>
+                  <p className="text-4xl font-bold text-gray-800 dark:text-white">
+                    {projects?.filter(p => {
+                      if (!p.deadline) return false;
+                      const deadline = new Date(p.deadline);
+                      const now = new Date();
+                      const diff = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      return diff <= 7 && diff >= 0;
+                    }).length || 0}
+                  </p>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Recent Projects */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Recent Projects */}
-              <div className="lg:col-span-2">
-                <Card>
+            
+            <h2 className="text-2xl font-bold text-white mb-4">Recent Projects</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {projects?.slice(0, 4).map((project) => (
+                <Card key={project.id} className="glass-card border-white/20">
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Recent Projects</CardTitle>
-                      <Button variant="ghost" size="sm" className="text-alphabits-purple">
-                        View All <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </div>
+                    <CardTitle className="text-gray-800 dark:text-white">{project.name}</CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-white/70">
+                      Client: {project.client}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { name: "Website Redesign", client: "Tech Corp", progress: 75 },
-                        { name: "Mobile App Development", client: "StartUp Inc", progress: 45 },
-                        { name: "Marketing Campaign", client: "Brand Solutions", progress: 90 },
-                        { name: "E-commerce Platform", client: "Retail Group", progress: 30 },
-                      ].map((project, i) => (
-                        <div key={i} className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="w-2 h-10 bg-alphabits-purple rounded-full mr-4"></div>
-                          <div className="flex-1">
-                            <h3 className="font-medium">{project.name}</h3>
-                            <p className="text-sm text-gray-500">{project.client}</p>
-                          </div>
-                          <div className="w-24">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-alphabits-purple h-2 rounded-full"
-                                style={{ width: `${project.progress}%` }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-right mt-1">{project.progress}%</p>
-                          </div>
+                    <div className="space-y-2">
+                      <p className="text-gray-700 dark:text-white/90">{project.description || 'No description'}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-white/70">Status:</span>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          project.status === 'Completed' ? 'bg-green-500/20 text-green-700 dark:text-green-300' : 
+                          project.status === 'In Progress' ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300' :
+                          'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300'
+                        }`}>
+                          {project.status}
+                        </span>
+                      </div>
+                      {project.deadline && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 dark:text-white/70">Deadline:</span>
+                          <span className="text-gray-700 dark:text-white/90">
+                            {new Date(project.deadline).toLocaleDateString()}
+                          </span>
                         </div>
-                      ))}
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-white/70">Progress:</span>
+                        <div className="w-32 h-2 bg-gray-200 dark:bg-white/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-alphabits-teal rounded-full" 
+                            style={{ width: `${project.progress || 0}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Right Column - Activity and Calendar */}
-              <div className="space-y-6">
-                {/* Activity Feed */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Activity</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { action: "Added new task", project: "Marketing Campaign", time: "2h ago" },
-                        { action: "Commented on", project: "Website Redesign", time: "4h ago" },
-                        { action: "Completed milestone", project: "Mobile App", time: "Yesterday" },
-                        { action: "Scheduled meeting", project: "E-commerce", time: "Yesterday" },
-                      ].map((activity, i) => (
-                        <div key={i} className="flex items-start">
-                          <div className="h-2 w-2 mt-2 rounded-full bg-alphabits-purple mr-3"></div>
-                          <div>
-                            <p className="text-sm">
-                              <span className="font-medium">{activity.action}</span>{" "}
-                              <span className="text-gray-600">{activity.project}</span>
-                            </p>
-                            <p className="text-xs text-gray-500">{activity.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+              ))}
+              
+              {(!projects || projects.length === 0) && (
+                <Card className="glass-card border-white/20 col-span-full">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-gray-700 dark:text-white/90">No projects found. Create your first project!</p>
                   </CardContent>
                 </Card>
-
-                {/* Calendar Preview */}
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Calendar</CardTitle>
-                      <Button variant="ghost" size="sm" className="text-alphabits-purple">
-                        <Calendar className="h-4 w-4 mr-1" /> Full Calendar
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { event: "Weekly Team Meeting", time: "10:00 AM", day: "Today" },
-                        { event: "Client Presentation", time: "2:30 PM", day: "Today" },
-                        { event: "Project Deadline", time: "11:59 PM", day: "Tomorrow" },
-                        { event: "Strategy Planning", time: "9:00 AM", day: "Jun 15" },
-                      ].map((event, i) => (
-                        <div key={i} className="flex items-center p-2 rounded-lg hover:bg-gray-50">
-                          <div className="w-12 h-12 bg-alphabits-purple/10 rounded flex items-center justify-center mr-3">
-                            <span className="text-xs font-medium text-alphabits-purple">{event.day}</span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-sm">{event.event}</h4>
-                            <p className="text-xs text-gray-500">{event.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              )}
             </div>
           </div>
         </main>

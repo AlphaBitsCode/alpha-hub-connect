@@ -155,19 +155,15 @@ export const MobileSidebar = ({
 export const SidebarLink = ({
   link,
   className,
+  onClick,
   ...props
 }: {
   link: Links;
   className?: string;
+  onClick?: (e: React.MouseEvent) => void;
   props?: any;
 }) => {
   const { open, animate } = useSidebar();
-
-  // Explicitly type the animation properties
-  const animationProps: { display: "none" | "inline-block"; opacity: number } = {
-    display: animate ? (open ? "inline-block" : "none") : "inline-block",
-    opacity: animate ? (open ? 1 : 0) : 1
-  };
 
   return (
     <Link
@@ -176,11 +172,15 @@ export const SidebarLink = ({
         "flex items-center justify-start gap-3 group/sidebar py-2 px-2 rounded-lg hover:bg-white/10 transition-all",
         className
       )}
+      onClick={onClick}
       {...props}
     >
       {link.icon}
       <motion.span
-        animate={animationProps}
+        animate={{
+          display: animate ? (open ? "inline-block" : "none") : "inline-block",
+          opacity: animate ? (open ? 1 : 0) : 1
+        }}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}

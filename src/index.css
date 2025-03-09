@@ -125,6 +125,40 @@
   .main-content-expanded {
     @apply md:ml-[300px];
   }
+  
+  /* Light mode specific styles to ensure text visibility */
+  :root:not(.dark) .glass-card {
+    @apply bg-white/70 border-gray-200 text-gray-800;
+  }
+  
+  :root:not(.dark) .glass-card .text-white {
+    @apply text-gray-800;
+  }
+  
+  :root:not(.dark) .glass-card .text-white\/70 {
+    @apply text-gray-600;
+  }
+  
+  :root:not(.dark) .glass-card .text-white\/60 {
+    @apply text-gray-500;
+  }
+  
+  /* Fix inputs in light mode */
+  :root:not(.dark) .glass {
+    @apply bg-white/70 border-gray-200 text-gray-800;
+  }
+  
+  :root:not(.dark) .glass:not(.text-white) {
+    @apply text-gray-800;
+  }
+  
+  :root:not(.dark) .glass.text-white {
+    @apply text-gray-800;
+  }
+  
+  :root:not(.dark) .glass.placeholder\:text-white\/60 {
+    @apply placeholder:text-gray-500;
+  }
 }
 
 /* App-specific styles */
@@ -144,4 +178,20 @@ main {
 /* Apply page padding consistently */
 .page-container {
   @apply p-4 md:p-6;
+}
+
+/* Light mode fixes */
+:root:not(.dark) .bg-gradient-to-br {
+  @apply text-gray-800;
+}
+
+:root:not(.dark) .text-white {
+  @apply text-gray-800;
+}
+
+/* Exception for the sidebar where we want to keep white text */
+.modern-glass-sidebar .text-white,
+.glass-sidebar .text-white,
+.sidebar-link .text-white {
+  @apply text-white !important;
 }
