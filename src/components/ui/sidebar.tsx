@@ -184,33 +184,36 @@ export const MobileSidebar = ({
   );
 };
 
+interface SidebarLinkProps {
+  link: Links;
+  className?: string;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}
+
 export const SidebarLink = ({
   link,
   className,
+  onClick,
   ...props
-}: {
-  link: Links;
-  className?: string;
-  props?: any;
-}) => {
+}: SidebarLinkProps) => {
   const { open, animate } = useSidebar();
-
-  // Fix TypeScript error by using a string/number directly
-  const display = animate ? (open ? "inline-block" : "none") : "inline-block";
-  const opacity = animate ? (open ? 1 : 0) : 1;
 
   return (
     <Link
       to={link.href}
       className={cn(
-        "flex items-center justify-start gap-3 group/sidebar py-2 px-2 rounded-lg hover:bg-white/10 transition-all duration-300",
+        "flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 cursor-pointer transition-all group/sidebar",
         className
       )}
+      onClick={onClick}
       {...props}
     >
       {link.icon}
       <motion.span
-        animate={{ display, opacity }}
+        animate={{
+          display: animate ? (open ? "inline-block" : "none") : "inline-block",
+          opacity: animate ? (open ? 1 : 0) : 1,
+        }}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}
