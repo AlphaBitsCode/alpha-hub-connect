@@ -257,7 +257,7 @@ const ProjectDashboard = () => {
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs">
                                 <p className="text-sm">
-                                  To embed your Google Sheet, publish it to the web first. Click "File" > "Share" > "Publish to web" in Google Sheets, then copy the Sheet ID.
+                                  To embed your Google Sheet, publish it to the web first. Click "File" {'>'}  "Share" {'>'} "Publish to web" in Google Sheets, then copy the Sheet ID.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
