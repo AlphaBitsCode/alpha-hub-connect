@@ -175,15 +175,22 @@ export const SidebarLink = ({
       {...props}
     >
       {link.icon}
-      <motion.span
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1
-        }}
-        className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
-      >
-        {link.label}
-      </motion.span>
+      {animate ? (
+        <motion.span
+          initial={{ opacity: open ? 1 : 0, display: open ? "block" : "none" }}
+          animate={{ 
+            opacity: open ? 1 : 0,
+            display: open ? "block" : "none"
+          }}
+          className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
+        >
+          {link.label}
+        </motion.span>
+      ) : (
+        <span className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre">
+          {link.label}
+        </span>
+      )}
     </Link>
   );
 };
