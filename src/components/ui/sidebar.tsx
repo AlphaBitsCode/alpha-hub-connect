@@ -4,7 +4,7 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import React, { useState, createContext, useContext } from "react";
-import { motion } from "framer-motion";
+import { motion, MotionValue } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 interface Links {
@@ -152,16 +152,18 @@ export const MobileSidebar = ({
   );
 };
 
-export const SidebarLink = ({
+interface SidebarLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {
+  link: Links;
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}
+
+export const SidebarLink: React.FC<SidebarLinkProps> = ({
   link,
   className,
   onClick,
   ...props
-}: {
-  link: Links;
-  className?: string;
-  onClick?: (e: React.MouseEvent) => void;
-} & React.HTMLAttributes<HTMLAnchorElement>) => {
+}) => {
   const { open, animate } = useSidebar();
 
   return (
@@ -177,7 +179,7 @@ export const SidebarLink = ({
       {link.icon}
       {animate ? (
         <motion.span
-          initial={{ opacity: open ? 1 : 0, display: open ? "block" : "none" }}
+          initial={{ opacity: open ? 1 : 0 }}
           animate={{ 
             opacity: open ? 1 : 0,
             display: open ? "block" : "none"
