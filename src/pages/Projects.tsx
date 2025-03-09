@@ -90,13 +90,6 @@ const Projects = () => {
               </div>
             </div>
 
-            {/* Status Filter */}
-            <div className="mb-6 flex justify-end">
-              <Button variant="outline" className="flex gap-2 glass border-white/20 text-white hover:bg-white/10">
-                <Filter className="h-4 w-4" /> Status Filter
-              </Button>
-            </div>
-
             {/* Project Tabs with improved contrast */}
             <Tabs defaultValue="all" className="mb-6">
               <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-white/10 p-1 backdrop-blur-md">
