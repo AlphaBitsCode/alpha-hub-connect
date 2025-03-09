@@ -4,7 +4,7 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import React, { useState, createContext, useContext } from "react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 interface Links {
@@ -161,6 +161,11 @@ export const SidebarLink = ({
   props?: any;
 }) => {
   const { open, animate } = useSidebar();
+  
+  // Fix for the TypeScript error - explicitly convert to string/number before passing to components
+  const displayValue = animate ? (open ? "inline-block" : "none") : "inline-block";
+  const opacityValue = animate ? (open ? 1 : 0) : 1;
+  
   return (
     <Link
       to={link.href}
@@ -173,8 +178,8 @@ export const SidebarLink = ({
       {link.icon}
       <motion.span
         animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
+          display: displayValue,
+          opacity: opacityValue,
         }}
         className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
