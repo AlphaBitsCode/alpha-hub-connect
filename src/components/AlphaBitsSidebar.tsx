@@ -5,11 +5,9 @@ import {
   LayoutDashboard, 
   Users, 
   FolderKanban, 
-  MessageSquare, 
-  Calendar, 
   Settings, 
-  LogOut, 
-  Bot 
+  LogOut,
+  PlusCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -34,31 +32,17 @@ export function AlphaBitsSidebar() {
       ),
     },
     {
-      label: "Team",
-      href: "/team",
+      label: "New Project",
+      href: "/new-project",
+      icon: (
+        <PlusCircle className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Team Members",
+      href: "/members",
       icon: (
         <Users className="text-white h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Messages",
-      href: "/messages",
-      icon: (
-        <MessageSquare className="text-white h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Calendar",
-      href: "/calendar",
-      icon: (
-        <Calendar className="text-white h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "AI Assistant",
-      href: "/ai-assistant",
-      icon: (
-        <Bot className="text-white h-5 w-5 flex-shrink-0" />
       ),
     },
     {
@@ -93,7 +77,7 @@ export function AlphaBitsSidebar() {
           <SidebarLink
             link={{
               label: user?.email?.split('@')[0] || 'User',
-              href: "/profile",
+              href: "/settings",
               icon: (
                 <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white text-alphabits-darkblue flex items-center justify-center font-bold">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}

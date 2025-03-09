@@ -162,7 +162,7 @@ export const SidebarLink = ({
 }) => {
   const { open, animate } = useSidebar();
   
-  // Fix for the TypeScript error - explicitly convert to string/number before passing to components
+  // Fix for the TypeScript error - explicitly define display and opacity as primitive values
   const displayValue = animate ? (open ? "inline-block" : "none") : "inline-block";
   const opacityValue = animate ? (open ? 1 : 0) : 1;
   

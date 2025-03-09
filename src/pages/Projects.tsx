@@ -2,12 +2,21 @@
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Clock, CheckCircle, AlertCircle, FileSpreadsheet } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  FileSpreadsheet,
+  ExternalLink
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -16,23 +25,17 @@ interface Project {
   id: string;
   name: string;
   client: string;
-  deadline: string;
-  status: string;
-  team?: string[];
-  progress: number;
-  google_sheet_id?: string;
+  deadline: string | null;
+  status: string | null;
+  progress: number | null;
+  google_sheet_id: string | null;
 }
 
 const Projects = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
@@ -50,17 +53,18 @@ const Projects = () => {
         throw error;
       }
       
-      return data.map(project => ({
-        ...project,
-        deadline: new Date(project.deadline).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }),
-        team: ["JD", "AK", "MC", "TJ"].slice(0, Math.floor(Math.random() * 4) + 1) // Mock data for team
-      }));
+      return data as Project[];
     },
     enabled: !!user,
+  });
+
+  const filteredProjects = projects.filter(project => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      project.name.toLowerCase().includes(searchLower) ||
+      project.client.toLowerCase().includes(searchLower) ||
+      (project.status && project.status.toLowerCase().includes(searchLower))
+    );
   });
 
   if (isLoading || authLoading) {
@@ -89,7 +93,10 @@ const Projects = () => {
                 <p className="text-white/70">Manage and track all your projects</p>
               </div>
               <div className="mt-4 md:mt-0">
-                <Button className="bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction">
+                <Button 
+                  className="bg-alphabits-teal hover:bg-alphabits-teal/90 text-white micro-interaction"
+                  onClick={() => navigate('/new-project')}
+                >
                   <Plus className="mr-2 h-4 w-4" /> New Project
                 </Button>
               </div>
@@ -102,6 +109,8 @@ const Projects = () => {
                 <Input 
                   placeholder="Search projects..." 
                   className="pl-9 glass border-white/20 text-white placeholder:text-white/60"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Button variant="outline" className="flex gap-2 glass border-white/20 text-white hover:bg-white/10">
@@ -117,34 +126,44 @@ const Projects = () => {
                 <TabsTrigger value="completed" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">Completed</TabsTrigger>
                 <TabsTrigger value="atrisk" className="rounded-md text-white data-[state=active]:bg-white/20 data-[state=active]:text-white micro-interaction">At Risk</TabsTrigger>
               </TabsList>
+              
               <TabsContent value="all" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {projects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
+                  {filteredProjects.length > 0 ? (
+                    filteredProjects.map((project) => (
+                      <ProjectCard key={project.id} project={project} />
+                    ))
+                  ) : (
+                    <div className="col-span-full flex justify-center py-10">
+                      <p className="text-white/70">No projects found. Adjust your search or create a new project.</p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
+              
               <TabsContent value="active" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {projects
+                  {filteredProjects
                     .filter(p => p.status === "In Progress")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
                     ))}
                 </div>
               </TabsContent>
+              
               <TabsContent value="completed" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {projects
+                  {filteredProjects
                     .filter(p => p.status === "Completed")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
                     ))}
                 </div>
               </TabsContent>
+              
               <TabsContent value="atrisk" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {projects
+                  {filteredProjects
                     .filter(p => p.status === "At Risk")
                     .map((project) => (
                       <ProjectCard key={project.id} project={project} />
@@ -160,9 +179,9 @@ const Projects = () => {
 };
 
 const ProjectCard = ({ project }: { project: Project }) => {
-  const [currentTab, setCurrentTab] = useState<'details' | 'sheet'>('details');
+  const navigate = useNavigate();
   
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case "Completed":
         return "bg-green-500/20 text-green-300";
@@ -173,7 +192,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
     switch (status) {
       case "Completed":
         return <CheckCircle className="h-3 w-3" />;
@@ -184,8 +203,20 @@ const ProjectCard = ({ project }: { project: Project }) => {
     }
   };
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "No deadline";
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
-    <Card className="glass-card hover:shadow-lg transition-shadow border-white/20 overflow-hidden">
+    <Card 
+      className="glass-card hover:shadow-lg transition-shadow border-white/20 overflow-hidden cursor-pointer" 
+      onClick={() => navigate(`/project/${project.id}`)}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="text-base font-semibold text-white">{project.name}</span>
@@ -197,90 +228,47 @@ const ProjectCard = ({ project }: { project: Project }) => {
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="pb-2">
-        <Tabs defaultValue="details" className="w-full" onValueChange={(value) => setCurrentTab(value as 'details' | 'sheet')}>
-          <TabsList className="grid w-full grid-cols-2 bg-white/10">
-            <TabsTrigger value="details" className="text-white data-[state=active]:bg-white/20">
-              Details
-            </TabsTrigger>
-            <TabsTrigger value="sheet" className="text-white data-[state=active]:bg-white/20">
-              <FileSpreadsheet className="mr-1 h-3.5 w-3.5" />
-              Tasks Sheet
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="mt-3">
-            <div className="mb-4">
-              <div className="text-sm text-white/70 mb-1">Client</div>
-              <div className="font-medium text-white">{project.client}</div>
-            </div>
-            
-            <div className="mb-4">
-              <div className="text-sm text-white/70 mb-1">Deadline</div>
-              <div className="font-medium flex items-center text-white">
-                <Clock className="h-4 w-4 mr-1 text-white/70" /> {project.deadline}
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <div className="text-sm text-white/70 mb-1">Team</div>
-              <div className="flex -space-x-2">
-                {project.team?.map((member: string, i: number) => (
-                  <div 
-                    key={i} 
-                    className="h-8 w-8 rounded-full bg-alphabits-teal flex items-center justify-center text-white text-xs font-medium border-2 border-alphabits-darkblue"
-                  >
-                    {member}
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-white/70">Progress</span>
-                <span className="text-sm font-medium text-white">{project.progress}%</span>
-              </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div
-                  className="bg-alphabits-teal h-2 rounded-full"
-                  style={{ width: `${project.progress}%` }}
-                ></div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="sheet" className="mt-3">
-            <div className="h-[200px] flex flex-col items-center justify-center space-y-3">
-              {project.google_sheet_id ? (
-                <>
-                  <FileSpreadsheet className="h-12 w-12 text-white/50" />
-                  <p className="text-white/70 text-sm text-center">Project tasks are tracked in Google Sheets</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 micro-interaction"
-                    onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}`, '_blank')}
-                  >
-                    Open Sheet
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheet className="h-12 w-12 text-white/30" />
-                  <p className="text-white/50 text-sm text-center">No Google Sheet connected to this project</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 micro-interaction"
-                  >
-                    Connect Sheet
-                  </Button>
-                </>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+      <CardContent className="pb-4">
+        <div className="mb-4">
+          <div className="text-sm text-white/70 mb-1">Client</div>
+          <div className="font-medium text-white">{project.client}</div>
+        </div>
+        
+        <div className="mb-4">
+          <div className="text-sm text-white/70 mb-1">Deadline</div>
+          <div className="font-medium flex items-center text-white">
+            <Clock className="h-4 w-4 mr-1 text-white/70" /> {formatDate(project.deadline)}
+          </div>
+        </div>
+        
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-white/70">Progress</span>
+            <span className="text-sm font-medium text-white">{project.progress || 0}%</span>
+          </div>
+          <div className="w-full bg-white/20 rounded-full h-2">
+            <div
+              className="bg-alphabits-teal h-2 rounded-full"
+              style={{ width: `${project.progress || 0}%` }}
+            ></div>
+          </div>
+        </div>
+        
+        {project.google_sheet_id && (
+          <div className="mt-4 pt-3 border-t border-white/10">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-center glass border-white/20 text-white hover:bg-white/10"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent navigating to project details
+                window.open(`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}`, '_blank');
+              }}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> View Dashboard
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
