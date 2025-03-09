@@ -8,17 +8,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   ArrowLeft, 
-  Clock, 
   Users, 
-  CheckCircle, 
-  AlertCircle, 
   FileSpreadsheet,
   Edit,
-  ExternalLink
+  ExternalLink,
+  HelpCircle
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectTaskList } from "@/components/ProjectTaskList";
+import { TeamAvatars } from "@/components/TeamAvatars";
+import { CurrentDateTime } from "@/components/CurrentDateTime";
+import { ProjectJournal } from "@/components/ProjectJournal";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Project {
   id: string;
@@ -109,21 +117,12 @@ const ProjectDashboard = () => {
   const getStatusIcon = (status: string | null) => {
     switch (status) {
       case "Completed":
-        return <CheckCircle className="h-4 w-4" />;
+        return <div className="h-4 w-4 bg-green-500 rounded-full"></div>;
       case "At Risk":
-        return <AlertCircle className="h-4 w-4" />;
+        return <div className="h-4 w-4 bg-red-500 rounded-full"></div>;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <div className="h-4 w-4 bg-blue-500 rounded-full"></div>;
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "No deadline set";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   };
 
   return (
@@ -154,7 +153,7 @@ const ProjectDashboard = () => {
             {/* Project header */}
             <div className="mb-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <h1 className="text-3xl font-bold text-white">{project.name}</h1>
+                <h1 className="text-4xl font-bold text-white">{project.name}</h1>
                 <Badge 
                   className={`mt-2 md:mt-0 flex items-center gap-1 px-3 py-1 ${getStatusColor(project.status)}`}
                 >
@@ -162,7 +161,7 @@ const ProjectDashboard = () => {
                   <span>{project.status}</span>
                 </Badge>
               </div>
-              <p className="text-white/70 mt-1">Client: {project.client}</p>
+              <p className="text-white/70 mt-1 text-lg">Client: {project.client}</p>
             </div>
             
             {/* Project details */}
@@ -170,68 +169,153 @@ const ProjectDashboard = () => {
               <Card className="glass-card border-white/20">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg text-white flex items-center">
-                    <Clock className="mr-2 h-5 w-5 text-alphabits-teal" /> Deadline
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-white">{formatDate(project.deadline)}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass-card border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-white flex items-center">
                     <Users className="mr-2 h-5 w-5 text-alphabits-teal" /> Team
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="glass border-white/20 text-white hover:bg-white/10"
-                    onClick={() => navigate('/members')}
-                  >
-                    View Team Members
-                  </Button>
+                  {projectId && <TeamAvatars projectId={projectId} />}
                 </CardContent>
               </Card>
+              
+              <CurrentDateTime />
               
               <Card className="glass-card border-white/20">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg text-white flex items-center">
-                    <FileSpreadsheet className="mr-2 h-5 w-5 text-alphabits-teal" /> Progress
+                    <FileSpreadsheet className="mr-2 h-5 w-5 text-alphabits-teal" /> Sheet
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-white">{project.progress || 0}% Complete</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div
-                      className="bg-alphabits-teal h-2 rounded-full"
-                      style={{ width: `${project.progress || 0}%` }}
-                    ></div>
-                  </div>
+                <CardContent className="flex items-center justify-between">
+                  <span className="text-white/90 text-sm truncate max-w-[150px]">
+                    {project.google_sheet_id ? project.google_sheet_id : "No sheet connected"}
+                  </span>
+                  
+                  {project.google_sheet_id && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="glass border-white/20 text-white hover:bg-white/10"
+                            onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}/edit`, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Open in Google Sheets</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </CardContent>
               </Card>
             </div>
             
             {/* Project content */}
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="bg-white/10 text-white">
+            <Tabs defaultValue="dashboard" className="w-full">
+              <TabsList className="bg-white/10 text-white border border-white/20 w-full justify-start">
+                <TabsTrigger 
+                  value="dashboard" 
+                  className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80"
+                >
+                  Dashboard
+                </TabsTrigger>
                 <TabsTrigger 
                   value="details" 
-                  className="data-[state=active]:bg-white/20 data-[state=active]:text-white"
+                  className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80"
                 >
                   Details
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="dashboard" 
-                  className="data-[state=active]:bg-white/20 data-[state=active]:text-white"
+                  value="journal" 
+                  className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80"
                 >
-                  Dashboard
+                  Journal
                 </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="dashboard" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="md:col-span-2">
+                    {project.google_sheet_id ? (
+                      <Card className="glass-card border-white/20 overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                          <CardTitle className="text-lg text-white">Google Sheet</CardTitle>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                                  onClick={() => window.open('https://support.google.com/docs/answer/183965?hl=en&co=GENIE.Platform%3DDesktop', '_blank')}
+                                >
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p className="text-sm">
+                                  To embed your Google Sheet, publish it to the web first. Click "File" > "Share" > "Publish to web" in Google Sheets, then copy the Sheet ID.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </CardHeader>
+                        <div className="aspect-[4/3] w-full">
+                          <iframe
+                            src={`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}/pubhtml?widget=true&headers=false`}
+                            className="w-full h-full border-0"
+                            title={`${project.name} Dashboard`}
+                          ></iframe>
+                        </div>
+                      </Card>
+                    ) : (
+                      <Card className="glass-card border-white/20">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center justify-between">
+                            <span>Dashboard</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                                    onClick={() => window.open('https://support.google.com/docs/answer/183965?hl=en&co=GENIE.Platform%3DDesktop', '_blank')}
+                                  >
+                                    <HelpCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="text-sm">
+                                    To embed your Google Sheet, publish it to the web first. Click "File" > "Share" > "Publish to web" in Google Sheets, then copy the Sheet ID.
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col items-center justify-center py-10">
+                          <FileSpreadsheet className="h-16 w-16 text-white/30 mb-4" />
+                          <p className="text-white/70 mb-4">No dashboard has been connected to this project yet.</p>
+                          <Button
+                            variant="outline"
+                            className="glass border-white/20 text-white hover:bg-white/10"
+                            onClick={() => navigate(`/projects/edit/${projectId}`)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" /> Connect Dashboard
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                  <div className="md:col-span-1">
+                    <ProjectTaskList />
+                  </div>
+                </div>
+              </TabsContent>
               
               <TabsContent value="details" className="mt-4">
                 <Card className="glass-card border-white/20">
@@ -246,33 +330,8 @@ const ProjectDashboard = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="dashboard" className="mt-4">
-                {project.google_sheet_id ? (
-                  <div className="bg-white rounded-lg overflow-hidden aspect-video w-full">
-                    <iframe
-                      src={`https://docs.google.com/spreadsheets/d/${project.google_sheet_id}/edit?usp=sharing&embedded=true`}
-                      className="w-full h-full border-0"
-                      title={`${project.name} Dashboard`}
-                    ></iframe>
-                  </div>
-                ) : (
-                  <Card className="glass-card border-white/20">
-                    <CardHeader>
-                      <CardTitle className="text-white">Dashboard</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <FileSpreadsheet className="h-16 w-16 text-white/30 mb-4" />
-                      <p className="text-white/70 mb-4">No dashboard has been connected to this project yet.</p>
-                      <Button
-                        variant="outline"
-                        className="glass border-white/20 text-white hover:bg-white/10"
-                        onClick={() => navigate(`/projects/edit/${projectId}`)}
-                      >
-                        <Edit className="mr-2 h-4 w-4" /> Connect Dashboard
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+              <TabsContent value="journal" className="mt-4">
+                <ProjectJournal />
               </TabsContent>
             </Tabs>
           </div>
