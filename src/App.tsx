@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import Team from "./pages/Team";
@@ -22,16 +23,16 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/team" element={<Team />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+            <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
             {/* Placeholder routes for future implementation */}
-            <Route path="/messages" element={<ComingSoon title="Messages" />} />
-            <Route path="/calendar" element={<ComingSoon title="Calendar" />} />
-            <Route path="/ai-assistant" element={<ComingSoon title="AI Assistant" />} />
-            <Route path="/settings" element={<ComingSoon title="Settings" />} />
-            <Route path="/profile" element={<ComingSoon title="User Profile" />} />
-            <Route path="/logout" element={<ComingSoon title="Logout" />} />
+            <Route path="/messages" element={<ProtectedRoute><ComingSoon title="Messages" /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><ComingSoon title="Calendar" /></ProtectedRoute>} />
+            <Route path="/ai-assistant" element={<ProtectedRoute><ComingSoon title="AI Assistant" /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><ComingSoon title="Settings" /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ComingSoon title="User Profile" /></ProtectedRoute>} />
+            <Route path="/logout" element={<ProtectedRoute><ComingSoon title="Logout" /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

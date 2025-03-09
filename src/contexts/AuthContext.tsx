@@ -41,7 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session.user);
         navigate("/");
-      }
       } else {
         // Get initial session if no hash
         const { data } = await supabase.auth.getSession();
