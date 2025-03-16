@@ -7,7 +7,8 @@ import {
   FolderKanban, 
   Settings, 
   LogOut,
-  PlusCircle
+  PlusCircle,
+  Bot
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -50,6 +51,13 @@ export function AlphaBitsSidebar() {
       href: "/members",
       icon: (
         <Users className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "AI Assistants",
+      href: "/assistants",
+      icon: (
+        <Bot className="text-white h-5 w-5 flex-shrink-0" />
       ),
     },
     {
@@ -102,7 +110,7 @@ export function AlphaBitsSidebar() {
           <div className="h-px w-full bg-white/20 my-2"></div>
           
           {/* Theme Toggle - Only show when sidebar is open */}
-          <SidebarThemeToggle isOpen={open} />
+          {open && <SidebarThemeToggle isOpen={open} />}
           
           <SidebarUserProfile 
             pathname={location.pathname} 

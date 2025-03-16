@@ -17,6 +17,11 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./contexts/AuthContext";
+import Assistants from "./pages/Assistants";
+import AssistantDetail from "./pages/AssistantDetail";
+import ManageAssistants from "./pages/ManageAssistants";
+import CreateAssistant from "./pages/CreateAssistant";
+import EditAssistant from "./pages/EditAssistant";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +100,48 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Members />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* AI Assistant Routes */}
+                <Route 
+                  path="/assistants" 
+                  element={
+                    <ProtectedRoute>
+                      <Assistants />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/assistants/:assistantId" 
+                  element={
+                    <ProtectedRoute>
+                      <AssistantDetail />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/manage-assistants" 
+                  element={
+                    <ProtectedRoute>
+                      <ManageAssistants />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/create-assistant" 
+                  element={
+                    <ProtectedRoute>
+                      <CreateAssistant />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/edit-assistant/:assistantId" 
+                  element={
+                    <ProtectedRoute>
+                      <EditAssistant />
                     </ProtectedRoute>
                   } 
                 />

@@ -35,13 +35,14 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 228 34% 27%;
-    --sidebar-foreground: 0 0% 100%;
+    /* Brighter sidebar for light theme */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 228 34% 27%;
     --sidebar-primary: 228 34% 27%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 186 61% 39%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 228 34% 35%;
+    --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 186 61% 39%;
   }
 
@@ -130,6 +131,24 @@
     @apply bg-alphabits-darkblue/75 backdrop-blur-xl backdrop-filter border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
   }
 
+  /* Light mode sidebar */
+  :root:not(.dark) .modern-glass-sidebar {
+    @apply bg-white/95 backdrop-blur-xl backdrop-filter border border-gray-200 shadow-lg;
+  }
+
+  :root:not(.dark) .modern-glass-sidebar .text-white {
+    @apply text-alphabits-darkblue;
+  }
+
+  :root:not(.dark) .sidebar-link:hover,
+  :root:not(.dark) .sidebar-link.active {
+    @apply bg-alphabits-darkblue/10;
+  }
+
+  :root:not(.dark) .sidebar-link svg {
+    @apply text-alphabits-darkblue;
+  }
+
   .micro-interaction {
     @apply transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98];
   }
@@ -158,7 +177,7 @@
   
   /* Light mode specific styles to ensure text visibility */
   :root:not(.dark) .glass-card {
-    @apply bg-white/70 border-gray-200;
+    @apply bg-white/95 border-gray-200 shadow-sm;
   }
   
   :root:not(.dark) .glass-card .text-white {
@@ -175,7 +194,7 @@
   
   /* Fix inputs in light mode */
   :root:not(.dark) .glass {
-    @apply bg-white/70 border-gray-200;
+    @apply bg-white/95 border-gray-200 shadow-sm;
   }
   
   :root:not(.dark) .glass:not(.text-white) {
@@ -188,6 +207,11 @@
   
   :root:not(.dark) .glass.placeholder\:text-white\/60 {
     @apply placeholder:text-gray-500;
+  }
+
+  /* Brighten light mode background */
+  :root:not(.dark) body {
+    @apply bg-gray-50;
   }
 }
 
@@ -221,9 +245,9 @@ main {
 }
 
 /* Exception for the sidebar where we want to keep white text */
-.modern-glass-sidebar .text-white,
-.glass-sidebar .text-white,
-.sidebar-link .text-white {
+.dark .modern-glass-sidebar .text-white,
+.dark .glass-sidebar .text-white,
+.dark .sidebar-link .text-white {
   color: white !important;
 }
 
