@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
@@ -25,9 +25,10 @@ interface Project {
 const ProjectSettings = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fetch project
-  const { data: project } = useQuery<Project>({
+  const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,20 +41,32 @@ const ProjectSettings = () => {
       
       return data as Project;
     },
-    // Remove the invalid onSuccess option
   });
 
-  const [name, setName] = useState(project?.name || "");
-  const [client, setClient] = useState(project?.client || "");
-  const [description, setDescription] = useState(project?.description || "");
-  const [deadline, setDeadline] = useState(project?.deadline || "");
-  const [status, setStatus] = useState(project?.status || "");
-  const [googleSheetId, setGoogleSheetId] = useState(project?.google_sheet_id || "");
-  const [googleSheetRange, setGoogleSheetRange] = useState(project?.google_sheet_range || "");
+  const [name, setName] = useState("");
+  const [client, setClient] = useState("");
+  const [description, setDescription] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [status, setStatus] = useState("");
+  const [googleSheetId, setGoogleSheetId] = useState("");
+  const [googleSheetRange, setGoogleSheetRange] = useState("");
+
+  // Set form values when project data is loaded
+  useEffect(() => {
+    if (project) {
+      setName(project.name || "");
+      setClient(project.client || "");
+      setDescription(project.description || "");
+      setDeadline(project.deadline || "");
+      setStatus(project.status || "");
+      setGoogleSheetId(project.google_sheet_id || "");
+      setGoogleSheetRange(project.google_sheet_range || "");
+    }
+  }, [project]);
 
   // Update project mutation
-  const updateProjectMutation = useMutation(
-    async () => {
+  const updateProjectMutation = useMutation({
+    mutationFn: async () => {
       const { data, error } = await supabase
         .from("projects")
         .update({
@@ -73,19 +86,32 @@ const ProjectSettings = () => {
       }
 
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Project updated successfully!");
+      navigate(`/project/${projectId}`);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update project: ${error.message}`);
     }
-  );
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await updateProjectMutation.mutateAsync();
-      toast.success("Project updated successfully!");
-      navigate(`/project/${projectId}`);
-    } catch (error: any) {
-      toast.error(`Failed to update project: ${error.message}`);
-    }
+    updateProjectMutation.mutate();
   };
+
+  if (isLoadingProject) {
+    return (
+      <div className="flex min-h-screen">
+        <AlphaBitsSidebar />
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-alphabits-teal" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -193,8 +219,8 @@ const ProjectSettings = () => {
                   <Button type="button" variant="outline" onClick={() => navigate(`/project/${projectId}`)} className="mr-2">
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-alphabits-teal hover:bg-alphabits-teal/90" disabled={updateProjectMutation.isLoading}>
-                    {updateProjectMutation.isLoading ? (
+                  <Button type="submit" className="bg-alphabits-teal hover:bg-alphabits-teal/90" disabled={updateProjectMutation.isPending}>
+                    {updateProjectMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Updating...

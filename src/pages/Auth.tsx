@@ -70,8 +70,13 @@ const Auth = () => {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    await signIn("email", { email });
-    setIsProcessing(false);
+    try {
+      await signIn(email, "");
+    } catch (error) {
+      console.error("Sign in error:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const handlePhoneSignIn = async (e: React.FormEvent) => {
@@ -139,7 +144,7 @@ const Auth = () => {
       title: "Redirecting to Google",
       description: "Please wait while we connect to Google...",
     });
-    await signIn("google");
+    await signIn("google", "");
   };
 
   const resetPhoneFlow = () => {

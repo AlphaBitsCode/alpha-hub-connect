@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,7 +6,7 @@ import { User } from '@supabase/supabase-js';
 
 export interface AuthContextType {
   user: User | null;
-  isAdmin: boolean; // Add isAdmin property
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -47,17 +48,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
+      if (email === "google") {
+        // Handle Google sign-in
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth`
+          }
+        });
+        
+        if (error) {
+          setError(error.message);
+        }
       } else {
-        setUser(data.user);
-        setIsAdmin(data.user?.app_metadata?.is_admin === true);
-        navigate('/');
+        // Handle email/password sign-in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setError(error.message);
+        } else {
+          setUser(data.user);
+          setIsAdmin(data.user?.app_metadata?.is_admin === true);
+          navigate('/');
+        }
       }
     } catch (err: any) {
       setError(err.message);
