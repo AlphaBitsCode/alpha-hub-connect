@@ -1,197 +1,268 @@
-
-"use client";
-
-import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, useEffect } from "react";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+import { 
+  LayoutDashboard, 
+  Users, 
+  FolderKanban, 
+  Settings, 
+  LogOut,
+  PlusCircle,
+  Bot
+} from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { SidebarThemeToggle } from "@/components/SidebarThemeToggle";
+import { SidebarUserProfile } from "@/components/SidebarUserProfile";
 
-interface Links {
-  label: string;
-  href: string;
-  icon: React.JSX.Element | React.ReactNode;
-}
-
-interface SidebarContextProps {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  animate: boolean;
-}
-
-const SidebarContext = createContext<SidebarContextProps | undefined>(
-  undefined
-);
-
-export const useSidebar = () => {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider");
-  }
-  return context;
-};
-
-export const SidebarProvider = ({
-  children,
-  open: openProp,
-  setOpen: setOpenProp,
-  animate = true,
-}: {
-  children: React.ReactNode;
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  animate?: boolean;
-}) => {
-  const [openState, setOpenState] = useState(false);
-
-  const open = openProp !== undefined ? openProp : openState;
-  const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
-
+export function AlphaBitsSidebar() {
+  const { signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
+  const links = [
+    {
+      label: "Dashboard",
+      href: "/",
+      icon: (
+        <LayoutDashboard className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Projects",
+      href: "/projects",
+      icon: (
+        <FolderKanban className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "New Project",
+      href: "/new-project",
+      icon: (
+        <PlusCircle className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Team Members",
+      href: "/members",
+      icon: (
+        <Users className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "AI Assistants",
+      href: "/assistants",
+      icon: (
+        <Bot className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Settings",
+      href: "/settings",
+      icon: (
+        <Settings className="text-white h-5 w-5 flex-shrink-0" />
+      ),
+    },
+  ];
+  
+  const [open, setOpen] = useState(false);
+  
+  // Close sidebar on route change for mobile
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+  
+  const handleSignOut = async () => {
+    await signOut();
+  };
+  
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(path);
+  };
+  
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
-      {children}
-    </SidebarContext.Provider>
+    <Sidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+          {open ? <Logo /> : <LogoIcon />}
+          <div className="mt-8 flex flex-col gap-2">
+            {links.map((link, idx) => (
+              <SidebarLink 
+                key={idx} 
+                link={link} 
+                className={cn(
+                  "sidebar-link",
+                  location.pathname === link.href && "bg-white/10 font-medium"
+                )}
+                onClick={handleNavigation(link.href)}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="h-px w-full bg-white/20 my-2"></div>
+          
+          {/* Theme Toggle - Only show when sidebar is open */}
+          {open && <SidebarThemeToggle isOpen={open} />}
+          
+          <SidebarUserProfile 
+            pathname={location.pathname} 
+            onNavigate={handleNavigation} 
+          />
+          
+          <div
+            className="flex items-center justify-start gap-3 py-2 px-2 rounded-lg hover:bg-white/10 cursor-pointer transition-all group/sidebar"
+            onClick={handleSignOut}
+          >
+            <LogOut className="text-white h-5 w-5 flex-shrink-0" />
+            {open && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+              >
+                Logout
+              </motion.span>
+            )}
+          </div>
+        </div>
+      </SidebarBody>
+    </Sidebar>
+  );
+}
+
+export const Logo = () => {
+  return (
+    <Link
+      to="/"
+      className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+    >
+      <img
+        src="https://alphabits.team/images/AB_Logo_white_icon.png"
+        alt="Alpha Hub Logo"
+        className="h-8 w-8 flex-shrink-0 rounded-md"
+      />
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium text-white whitespace-pre text-lg"
+      >
+        Alpha Hub
+      </motion.span>
+    </Link>
   );
 };
+
+export const LogoIcon = () => {
+  return (
+    <Link
+      to="/"
+      className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+    >
+      <img
+        src="https://alphabits.team/images/AB_Logo_white_icon.png"
+        alt="Alpha Hub Logo"
+        className="h-8 w-8 flex-shrink-0 rounded-md"
+      />
+    </Link>
+  );
+};
+
+import { useContext } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+interface SidebarContextType {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const SidebarContext = React.createContext<SidebarContextType>({
+  open: false,
+  setOpen: () => {},
+});
+
+export const useSidebarContext = () => useContext(SidebarContext);
 
 export const Sidebar = ({
   children,
   open,
   setOpen,
-  animate,
 }: {
   children: React.ReactNode;
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  animate?: boolean;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   return (
-    <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
-      {children}
-    </SidebarProvider>
+    <SidebarContext.Provider value={{ open, setOpen }}>
+      <motion.aside
+        initial={{ width: 75 }}
+        animate={{ width: open ? 260 : 75 }}
+        className="bg-black/40 backdrop-blur-sm h-screen fixed top-0 left-0 z-50 overflow-hidden shadow-xl transition-all duration-300"
+      >
+        {children}
+      </motion.aside>
+    </SidebarContext.Provider>
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
-  return (
-    <>
-      <DesktopSidebar {...props} />
-      <MobileSidebar {...props} />
-    </>
-  );
-};
-
-export const DesktopSidebar = ({
-  className,
+export const SidebarBody = ({
   children,
-  ...props
-}: React.ComponentProps<typeof motion.div>) => {
-  const { open, setOpen, animate } = useSidebar();
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   return (
-    <motion.div
+    <div
       className={cn(
-        "fixed h-screen px-4 py-4 hidden md:flex md:flex-col modern-glass-sidebar rounded-r-xl z-50",
+        "h-full w-full flex flex-col p-3",
         className
       )}
-      initial={{ width: animate ? (open ? "300px" : "70px") : "300px" }}
-      animate={{
-        width: animate ? (open ? "300px" : "70px") : "300px",
-      }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
 
-export const MobileSidebar = ({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof motion.div>) => {
-  const { open, setOpen } = useSidebar();
-  return (
-    <>
-      <div
-        className={cn(
-          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between modern-glass-sidebar w-full rounded-b-xl"
-        )}
-      >
-        <div className="flex justify-end z-20 w-full">
-          <Menu
-            className="text-white cursor-pointer"
-            onClick={() => setOpen(!open)}
-          />
-        </div>
-        <motion.div
-          initial={{ x: "-100%", opacity: 0 }}
-          animate={{ x: open ? 0 : "-100%", opacity: open ? 1 : 0 }}
-          transition={{
-            duration: 0.3,
-            ease: "easeInOut",
-          }}
-          className={cn(
-            "fixed h-full w-full inset-0 modern-glass-sidebar p-10 z-[100] flex flex-col justify-between backdrop-blur-xl",
-            className,
-            open ? "block" : "hidden"
-          )}
-          {...props}
-        >
-          <div
-            className="absolute right-10 top-10 z-50 text-white cursor-pointer"
-            onClick={() => setOpen(!open)}
-          >
-            <X />
-          </div>
-          {children}
-        </motion.div>
-      </div>
-    </>
-  );
-};
-
-interface SidebarLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {
-  link: Links;
-  className?: string;
-  onClick?: (e: React.MouseEvent) => void;
-}
-
-export const SidebarLink: React.FC<SidebarLinkProps> = ({
+export const SidebarLink = ({
   link,
   className,
   onClick,
-  ...props
+}: {
+  link: { href: string; label: string; icon: React.ReactNode };
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }) => {
-  const { open, animate } = useSidebar();
+  const { open } = useSidebarContext();
 
   return (
     <Link
       to={link.href}
       className={cn(
-        "flex items-center justify-start gap-3 group/sidebar py-2 px-2 rounded-lg hover:bg-white/10 transition-all",
+        "flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/10 transition-all group/sidebar",
         className
       )}
       onClick={onClick}
-      {...props}
     >
       {link.icon}
-      {animate ? (
-        open && (
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
-          >
-            {link.label}
-          </motion.span>
-        )
-      ) : (
-        <span className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre">
+      {open && (
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
+        >
           {link.label}
-        </span>
+        </motion.span>
       )}
     </Link>
   );

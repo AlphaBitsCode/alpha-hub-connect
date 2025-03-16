@@ -9,6 +9,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assistant_skills: {
+        Row: {
+          assistant_id: string
+          created_at: string
+          id: string
+          skill_id: string
+        }
+        Insert: {
+          assistant_id: string
+          created_at?: string
+          id?: string
+          skill_id: string
+        }
+        Update: {
+          assistant_id?: string
+          created_at?: string
+          id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_skills_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistants: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          introduction: string
+          is_public: boolean
+          name: string
+          persona: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          introduction: string
+          is_public?: boolean
+          name: string
+          persona: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          introduction?: string
+          is_public?: boolean
+          name?: string
+          persona?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_bookings: {
         Row: {
           company: string | null
@@ -234,6 +303,24 @@ export type Database = {
           progress?: number | null
           status?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }

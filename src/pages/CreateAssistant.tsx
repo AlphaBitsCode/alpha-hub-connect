@@ -1,45 +1,53 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AlphaBitsSidebar } from "@/components/AlphaBitsSidebar";
-import { CreateAssistantDto, AssistantSkill } from "@/types/assistant";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, Check, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+  ArrowLeft, 
+  Bot, 
+  Check, 
+  Loader2, 
+  PlusCircle 
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { toast } from "sonner";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { CreateAssistantDto } from "@/types/assistant";
+import { MultiSelect } from "@/components/ui/multi-select"; // You'll need to implement this
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  avatar_url: z.string().url({ message: "Please enter a valid URL." }).optional(),
+  skills: z.array(z.string()).min(1, { message: "At least one skill is required." }),
+  introduction: z.string().min(10, { message: "Introduction must be at least 10 characters." }),
+  persona: z.string().min(20, { message: "Persona must be at least 20 characters." }),
+  is_public: z.boolean().default(false),
+});
 
 const CreateAssistant = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  const [formData, setFormData] = useState<CreateAssistantDto>({
-    name: "",
-    avatar_url: "",
-    skills: [],
-    introduction: "",
-    persona: "",
-    is_public: false
-  });
-  
-  const [newSkill, setNewSkill] = useState<string>("");
-  
-  // Fetch existing skills
-  const { data: skills } = useQuery({
+  // Get skills for dropdown
+  const { data: skills, isLoading: skillsLoading } = useQuery({
     queryKey: ["skills"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -49,40 +57,41 @@ const CreateAssistant = () => {
       
       if (error) throw error;
       
-      return data as AssistantSkill[];
+      return data.map(skill => ({
+        value: skill.id,
+        label: skill.name
+      }));
     },
   });
-
+  
   // Create assistant mutation
   const createAssistantMutation = useMutation({
-    mutationFn: async (data: CreateAssistantDto) => {
-      // 1. Insert the assistant
-      const { data: assistant, error } = await supabase
+    mutationFn: async (values: CreateAssistantDto) => {
+      // Insert assistant
+      const { data: assistant, error: assistantError } = await supabase
         .from("assistants")
         .insert({
-          name: data.name,
-          avatar_url: data.avatar_url || null,
-          introduction: data.introduction,
-          persona: data.persona,
-          is_public: data.is_public
+          name: values.name,
+          avatar_url: values.avatar_url || null,
+          introduction: values.introduction,
+          persona: values.persona,
+          is_public: values.is_public,
         })
         .select()
         .single();
       
-      if (error) throw error;
+      if (assistantError) throw assistantError;
       
-      // 2. Insert the skills relationships
-      if (data.skills.length > 0) {
-        const skillsToInsert = data.skills.map(skillId => ({
-          assistant_id: assistant.id,
-          skill_id: skillId
-        }));
-        
-        const { error: skillsError } = await supabase
+      // Create skills that don't exist yet
+      for (const skillId of values.skills) {
+        // Link skills to assistant
+        const { error: skillLinkError } = await supabase
           .from("assistant_skills")
-          .insert(skillsToInsert);
+          .insert(
+            { assistant_id: assistant.id, skill_id: skillId }
+          );
         
-        if (skillsError) throw skillsError;
+        if (skillLinkError) throw skillLinkError;
       }
       
       return assistant;
@@ -97,7 +106,7 @@ const CreateAssistant = () => {
       console.error(error);
     },
   });
-
+  
   // Create skill mutation
   const createSkillMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -109,96 +118,47 @@ const CreateAssistant = () => {
       
       if (error) throw error;
       
-      return data as AssistantSkill;
+      return {
+        value: data.id,
+        label: data.name
+      };
     },
-    onSuccess: (skill) => {
-      toast.success(`Skill "${skill.name}" created`);
+    onSuccess: (newSkill) => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
-      setFormData(prev => ({
-        ...prev,
-        skills: [...prev.skills, skill.id]
-      }));
-      setNewSkill("");
+      toast.success(`Skill "${newSkill.label}" created`);
     },
     onError: (error) => {
       toast.error("Failed to create skill");
       console.error(error);
     },
   });
+  
+  // Form setup
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      avatar_url: "",
+      skills: [],
+      introduction: "",
+      persona: "",
+      is_public: false,
+    },
+  });
+  
+  const handleSubmit = form.handleSubmit((values) => {
+    createAssistantMutation.mutate(values as CreateAssistantDto);
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.name) {
-      toast.error("Assistant name is required");
-      return;
-    }
-    
-    if (!formData.introduction) {
-      toast.error("Introduction is required");
-      return;
-    }
-    
-    if (!formData.persona) {
-      toast.error("Persona is required");
-      return;
-    }
-    
-    createAssistantMutation.mutate(formData);
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSwitchChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, is_public: checked }));
-  };
-  
-  const handleSkillSelect = (skillId: string) => {
-    if (formData.skills.includes(skillId)) {
-      // Remove skill
-      setFormData(prev => ({
-        ...prev,
-        skills: prev.skills.filter(id => id !== skillId)
-      }));
-    } else {
-      // Add skill
-      setFormData(prev => ({
-        ...prev,
-        skills: [...prev.skills, skillId]
-      }));
-    }
-  };
-  
-  const handleCreateSkill = () => {
-    if (!newSkill.trim()) {
-      toast.error("Skill name cannot be empty");
-      return;
-    }
-    
-    createSkillMutation.mutate(newSkill.trim());
-  };
-  
-  const getSkillNameById = (id: string): string => {
-    return skills?.find(skill => skill.id === id)?.name || "";
-  };
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase();
+  const handleCreateSkill = (skillName: string) => {
+    createSkillMutation.mutate(skillName);
   };
 
   return (
     <div className="flex min-h-screen">
       <AlphaBitsSidebar />
       <main className="flex-1 p-6">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center mb-8">
             <Button 
               onClick={() => navigate("/manage-assistants")} 
@@ -208,198 +168,174 @@ const CreateAssistant = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <h1 className="text-3xl font-bold">Create New Assistant</h1>
+            <h1 className="text-3xl font-bold">Create New AI Assistant</h1>
           </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg text-white">Basic Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                    <Avatar className="h-24 w-24 border-4 border-alphabits-teal">
-                      <AvatarImage src={formData.avatar_url} />
-                      <AvatarFallback className="bg-alphabits-teal text-white text-lg">
-                        {formData.name ? getInitials(formData.name) : <Bot />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Label htmlFor="avatar_url" className="text-white mb-2 block">
-                        Avatar URL
-                      </Label>
-                      <Input
-                        id="avatar_url"
-                        name="avatar_url"
-                        value={formData.avatar_url}
-                        onChange={handleInputChange}
-                        placeholder="https://example.com/avatar.png"
-                        className="glass border-white/20 text-white placeholder:text-white/60"
-                      />
-                      <p className="text-white/60 text-xs mt-1">
-                        Enter a URL for the assistant's avatar image
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-4">
-                    <div>
-                      <Label htmlFor="name" className="text-white mb-2 block">
-                        Name*
-                      </Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="AI Assistant Name"
-                        required
-                        className="glass border-white/20 text-white placeholder:text-white/60"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="introduction" className="text-white mb-2 block">
-                        Introduction*
-                      </Label>
-                      <Textarea
-                        id="introduction"
-                        name="introduction"
-                        value={formData.introduction}
-                        onChange={handleInputChange}
-                        placeholder="A brief description of what this assistant can help with"
-                        required
-                        className="glass border-white/20 text-white placeholder:text-white/60 min-h-[80px]"
-                      />
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label htmlFor="skills" className="text-white">
-                          Skills & Expertise
-                        </Label>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            value={newSkill}
-                            onChange={(e) => setNewSkill(e.target.value)}
-                            placeholder="Add new skill"
-                            className="glass border-white/20 text-white placeholder:text-white/60 h-8 text-sm w-40"
+
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-lg text-white">AI Assistant Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter assistant name" 
+                            {...field} 
                           />
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleCreateSkill}
-                            className="h-8 text-white hover:bg-white/10"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add
-                          </Button>
+                        </FormControl>
+                        <FormDescription>
+                          The name of your AI assistant.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="avatar_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Avatar URL</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://example.com/avatar.png" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          URL to the assistant's avatar image.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="skills"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Skills</FormLabel>
+                        <FormControl>
+                          <MultiSelect 
+                            options={skills || []} 
+                            placeholder="Select skills"
+                            loading={skillsLoading} 
+                            onChange={field.onChange}
+                            value={field.value}
+                            onCreateOption={handleCreateSkill}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Skills and capabilities of the assistant.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="introduction"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Introduction</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="A brief introduction of the assistant"
+                            className="h-24"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          A short introduction text displayed to users.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="persona"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Persona</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Detailed description of the assistant's personality and behavior"
+                            className="h-32"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          A detailed description of the assistant's personality, tone, and behavior.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="is_public"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-white">Public Assistant</FormLabel>
+                          <FormDescription>
+                            Make this assistant visible to everyone.
+                          </FormDescription>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {formData.skills.map(skillId => (
-                          <Badge
-                            key={skillId}
-                            variant="outline"
-                            className="bg-alphabits-teal/20 text-alphabits-teal border-alphabits-teal/30 flex items-center gap-1"
-                          >
-                            {getSkillNameById(skillId)}
-                            <X
-                              className="h-3 w-3 cursor-pointer hover:text-red-400"
-                              onClick={() => handleSkillSelect(skillId)}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
-                      
-                      {skills && skills.length > 0 && (
-                        <div className="glass border border-white/20 rounded-md p-2 max-h-40 overflow-y-auto">
-                          <div className="flex flex-wrap gap-2">
-                            {skills.map(skill => (
-                              <div
-                                key={skill.id}
-                                onClick={() => handleSkillSelect(skill.id)}
-                                className={`cursor-pointer px-2 py-1 rounded-md text-sm flex items-center gap-1 ${
-                                  formData.skills.includes(skill.id)
-                                    ? "bg-alphabits-teal/20 text-alphabits-teal"
-                                    : "bg-white/5 text-white/70 hover:bg-white/10"
-                                }`}
-                              >
-                                {formData.skills.includes(skill.id) && (
-                                  <Check className="h-3 w-3" />
-                                )}
-                                {skill.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate("/manage-assistants")}
+                      className="mr-2"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      className="bg-alphabits-teal hover:bg-alphabits-teal/90"
+                      disabled={createAssistantMutation.isPending}
+                    >
+                      {createAssistantMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="mr-2 h-4 w-4" />
+                          Create Assistant
+                        </>
                       )}
-                    </div>
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg text-white">Persona & Behavior</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="persona" className="text-white mb-2 block">
-                      Persona Description*
-                    </Label>
-                    <Textarea
-                      id="persona"
-                      name="persona"
-                      value={formData.persona}
-                      onChange={handleInputChange}
-                      placeholder="Detailed description of how this assistant should behave, communicate, and respond"
-                      required
-                      className="glass border-white/20 text-white placeholder:text-white/60 min-h-[150px]"
-                    />
-                    <p className="text-white/60 text-xs mt-1">
-                      Define the assistant's tone, style, expertise level, and any specific language patterns
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="space-y-1">
-                      <div className="text-white font-medium">Public Availability</div>
-                      <div className="text-white/60 text-sm">
-                        Make this assistant available to all users
-                      </div>
-                    </div>
-                    <Switch
-                      checked={formData.is_public}
-                      onCheckedChange={handleSwitchChange}
-                      className="data-[state=checked]:bg-alphabits-teal"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/manage-assistants")}
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-alphabits-teal hover:bg-alphabits-teal/90"
-                  disabled={createAssistantMutation.isPending}
-                >
-                  {createAssistantMutation.isPending ? "Creating..." : "Create Assistant"}
-                </Button>
-              </div>
-            </div>
-          </form>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

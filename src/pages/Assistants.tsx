@@ -22,11 +22,24 @@ const Assistants = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("assistants")
-        .select("*, assistant_skills(*)");
+        .select(`
+          *,
+          assistant_skills (
+            skill_id,
+            skills:skill_id (
+              id,
+              name
+            )
+          )
+        `);
       
       if (error) throw error;
       
-      return data as Assistant[];
+      // Transform data to match Assistant type
+      return data.map(assistant => ({
+        ...assistant,
+        skills: assistant.assistant_skills.map((as: any) => as.skills)
+      })) as unknown as Assistant[];
     },
   });
 

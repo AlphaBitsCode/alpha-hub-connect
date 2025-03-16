@@ -1,166 +1,109 @@
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-
-type AuthContextType = {
-  session: Session | null;
+export interface AuthContextType {
   user: User | null;
-  signIn: (provider: "google" | "email" | "phone", options?: any) => Promise<void>;
+  isAdmin: boolean; // Add isAdmin property
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
-};
+  error: string | null;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Handle initial session and auth state changes
-    const initializeAuth = async () => {
+    const loadUser = async () => {
       setLoading(true);
-      
-      try {
-        // Handle OAuth callback and hash params
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Error getting session:", error);
-          toast({
-            title: "Authentication error",
-            description: "There was a problem signing you in. Please try again.",
-            variant: "destructive",
-          });
-        } else if (session) {
-          setSession(session);
-          setUser(session.user);
-          // Only navigate to root if we're on the auth page
-          if (window.location.pathname === '/auth') {
-            navigate('/');
-          }
-        }
-      } catch (err) {
-        console.error("Authentication initialization error:", err);
-      } finally {
-        setLoading(false);
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        setError(error.message);
       }
+
+      setUser(session?.user || null);
+      setIsAdmin(session?.user?.app_metadata?.is_admin === true);
+      setLoading(false);
     };
 
-    initializeAuth();
+    loadUser();
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      setIsAdmin(session?.user?.app_metadata?.is_admin === true);
     });
+  }, []);
 
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
-
-  const signIn = async (provider: "google" | "email" | "phone", options?: any) => {
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      
-      if (provider === "google") {
-        toast({
-          title: "Redirecting to Google",
-          description: "Please wait while we connect to Google...",
-        });
-        
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `https://hub.alphabits.team/`, // Updated redirect URL
-          },
-        });
-        
-        if (error) throw error;
-      } else if (provider === "email") {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: options.email,
-          options: {
-            emailRedirectTo: `https://hub.alphabits.team/`, // Updated redirect URL
-          },
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Magic link sent!",
-          description: "Check your email for the login link",
-        });
-      } else if (provider === "phone") {
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: options.phone,
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "OTP sent!",
-          description: "Check your phone for the verification code",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Authentication error",
-        description: error.message,
-        variant: "destructive",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      console.error("Auth error:", error);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setUser(data.user);
+        setIsAdmin(data.user?.app_metadata?.is_admin === true);
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      navigate("/auth");
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setError(error.message);
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+        navigate('/auth');
+      }
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const value: AuthContextType = {
+    user,
+    isAdmin,
+    signIn,
+    signOut,
+    loading,
+    error,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        signIn,
-        signOut,
-        loading,
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-}
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
