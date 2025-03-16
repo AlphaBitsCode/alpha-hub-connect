@@ -9,14 +9,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, MessageSquare } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Bot, 
+  MessageSquare,
+  BarChart3, 
+  Briefcase, 
+  UserPlus, 
+  Megaphone, 
+  HeadphonesIcon 
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
 
 const AssistantDetail = () => {
   const { assistantId } = useParams<{assistantId: string}>();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { isDarkMode } = useTheme();
 
   // Fetch assistant details
   const { data: assistant, isLoading, error } = useQuery({
@@ -46,6 +58,24 @@ const AssistantDetail = () => {
       } as unknown as Assistant;
     },
   });
+
+  const getAssistantIcon = (name: string = "") => {
+    if (name.includes("Data Analyst")) return <BarChart3 className="h-full w-full p-2 text-white" />;
+    if (name.includes("Project Manager")) return <Briefcase className="h-full w-full p-2 text-white" />;
+    if (name.includes("HR")) return <UserPlus className="h-full w-full p-2 text-white" />;
+    if (name.includes("Marketing")) return <Megaphone className="h-full w-full p-2 text-white" />;
+    if (name.includes("Customer Support")) return <HeadphonesIcon className="h-full w-full p-2 text-white" />;
+    return <Bot className="h-full w-full p-2 text-white" />;
+  };
+
+  const getAssistantColor = (name: string = "") => {
+    if (name.includes("Data Analyst")) return "bg-blue-600";
+    if (name.includes("Project Manager")) return "bg-green-600";
+    if (name.includes("HR")) return "bg-purple-600";
+    if (name.includes("Marketing")) return "bg-orange-600";
+    if (name.includes("Customer Support")) return "bg-red-600";
+    return "bg-alphabits-teal";
+  };
 
   const getInitials = (name: string = "") => {
     return name
@@ -117,19 +147,35 @@ const AssistantDetail = () => {
             )}
           </div>
 
-          <Card className="glass-card mb-8">
+          <Card className={cn(
+            "mb-8",
+            isDarkMode ? "glass-card" : "bg-white shadow-md"
+          )}>
             <CardHeader className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <Avatar className="h-24 w-24 border-4 border-alphabits-teal">
-                <AvatarImage src={assistant.avatar_url} />
-                <AvatarFallback className="bg-alphabits-teal text-white text-2xl">
-                  {getInitials(assistant.name)}
-                </AvatarFallback>
+              <Avatar className={cn(
+                "h-24 w-24 border-4",
+                getAssistantColor(assistant.name),
+                isDarkMode ? "border-white/20" : "border-gray-200"
+              )}>
+                {assistant.avatar_url ? (
+                  <AvatarImage src={assistant.avatar_url} />
+                ) : (
+                  <AvatarFallback className={getAssistantColor(assistant.name)}>
+                    {getAssistantIcon(assistant.name)}
+                  </AvatarFallback>
+                )}
               </Avatar>
               <div className="space-y-2">
-                <CardTitle className="text-2xl text-white">{assistant.name}</CardTitle>
+                <CardTitle className={cn(
+                  "text-2xl",
+                  isDarkMode ? "text-white" : "text-gray-800"
+                )}>{assistant.name}</CardTitle>
                 <div className="flex flex-wrap gap-2">
                   {assistant.skills?.map((skill, idx) => (
-                    <Badge key={idx} variant="outline" className="bg-alphabits-teal/20 text-alphabits-teal border-alphabits-teal/30">
+                    <Badge key={idx} variant="outline" className={cn(
+                      isDarkMode ? "bg-alphabits-teal/20 text-alphabits-teal border-alphabits-teal/30" :
+                      "bg-alphabits-teal/10 text-alphabits-teal/90 border-alphabits-teal/20"
+                    )}>
                       {skill.name}
                     </Badge>
                   ))}
@@ -142,15 +188,26 @@ const AssistantDetail = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-white mb-2">Introduction</h3>
-                <p className="text-white/80">{assistant.introduction}</p>
+                <h3 className={cn(
+                  "text-lg font-medium mb-2",
+                  isDarkMode ? "text-white" : "text-gray-800"
+                )}>Introduction</h3>
+                <p className={cn(
+                  isDarkMode ? "text-white/80" : "text-gray-600"
+                )}>{assistant.introduction}</p>
               </div>
               
-              <Separator className="bg-white/10" />
+              <Separator className={isDarkMode ? "bg-white/10" : "bg-gray-200"} />
               
               <div>
-                <h3 className="text-lg font-medium text-white mb-2">Persona</h3>
-                <p className="text-white/80 whitespace-pre-line">{assistant.persona}</p>
+                <h3 className={cn(
+                  "text-lg font-medium mb-2",
+                  isDarkMode ? "text-white" : "text-gray-800"
+                )}>Persona</h3>
+                <p className={cn(
+                  "whitespace-pre-line",
+                  isDarkMode ? "text-white/80" : "text-gray-600"
+                )}>{assistant.persona}</p>
               </div>
             </CardContent>
           </Card>

@@ -1,7 +1,7 @@
 
 import React, { useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { motion, MotionValue } from "framer-motion";
+import { Link as RouterLink, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SidebarContextType {
@@ -30,7 +30,11 @@ export const Sidebar = ({
       <motion.aside
         initial={{ width: 75 }}
         animate={{ width: open ? 260 : 75 }}
-        className="bg-black/40 backdrop-blur-sm h-screen fixed top-0 left-0 z-50 overflow-hidden shadow-xl transition-all duration-300"
+        className={cn(
+          "h-screen fixed top-0 left-0 z-50 overflow-hidden shadow-xl transition-all duration-300",
+          "dark:bg-black/40 dark:backdrop-blur-sm", // Dark mode styling
+          "bg-white border-r border-gray-200" // Light mode styling
+        )}
       >
         {children}
       </motion.aside>
@@ -67,12 +71,17 @@ export const SidebarLink = ({
   onClick?: (e: React.MouseEvent) => void;
 }) => {
   const { open } = useSidebarContext();
+  const location = useLocation();
+  const isActive = location.pathname === link.href;
 
   return (
-    <Link
+    <RouterLink
       to={link.href}
       className={cn(
-        "flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/10 transition-all group/sidebar",
+        "flex items-center gap-3 py-2 px-2 rounded-lg transition-all group/sidebar",
+        "dark:hover:bg-white/10", // Dark mode hover
+        "hover:bg-gray-100", // Light mode hover
+        isActive && "dark:bg-white/10 bg-gray-100 font-medium", // Active state
         className
       )}
       onClick={onClick}
@@ -83,20 +92,24 @@ export const SidebarLink = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="text-white text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre"
+          className={cn(
+            "text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre",
+            "dark:text-white", // Dark mode text
+            "text-gray-800" // Light mode text
+          )}
         >
           {link.label}
         </motion.span>
       )}
-    </Link>
+    </RouterLink>
   );
 };
 
 export const Logo = () => {
   return (
-    <Link
+    <RouterLink
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
       <img
         src="https://alphabits.team/images/AB_Logo_white_icon.png"
@@ -106,25 +119,29 @@ export const Logo = () => {
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium text-white whitespace-pre text-lg"
+        className={cn(
+          "font-medium whitespace-pre text-lg",
+          "dark:text-white", // Dark mode text
+          "text-gray-800" // Light mode text
+        )}
       >
         Alpha Hub
       </motion.span>
-    </Link>
+    </RouterLink>
   );
 };
 
 export const LogoIcon = () => {
   return (
-    <Link
+    <RouterLink
       to="/"
-      className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
       <img
         src="https://alphabits.team/images/AB_Logo_white_icon.png"
         alt="Alpha Hub Logo"
         className="h-8 w-8 flex-shrink-0 rounded-md"
       />
-    </Link>
+    </RouterLink>
   );
 };

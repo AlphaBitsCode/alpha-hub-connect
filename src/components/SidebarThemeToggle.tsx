@@ -1,8 +1,10 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
 
 interface SidebarThemeToggleProps {
   isOpen: boolean;
@@ -17,18 +19,21 @@ export const SidebarThemeToggle: React.FC<SidebarThemeToggleProps> = ({ isOpen }
 
   return (
     <>
-      <div className="flex items-center justify-between px-2 py-2 text-white">
+      <div className="flex items-center justify-between px-2 py-2">
         <div className="flex items-center gap-3">
           {isDarkMode ? (
             <Moon className="h-5 w-5 text-white" />
           ) : (
-            <Sun className="h-5 w-5 text-white" />
+            <Sun className="h-5 w-5 text-gray-700" />
           )}
           <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-white text-sm whitespace-pre"
+            className={cn(
+              "text-sm whitespace-pre",
+              isDarkMode ? "text-white" : "text-gray-700"
+            )}
           >
             {isDarkMode ? "Dark Mode" : "Light Mode"}
           </motion.span>
@@ -39,7 +44,10 @@ export const SidebarThemeToggle: React.FC<SidebarThemeToggleProps> = ({ isOpen }
           className="data-[state=checked]:bg-alphabits-teal"
         />
       </div>
-      <div className="h-px w-full bg-white/20 my-2"></div>
+      <div className={cn(
+        "h-px w-full my-2",
+        isDarkMode ? "bg-white/20" : "bg-gray-200"
+      )}></div>
     </>
   );
 };
